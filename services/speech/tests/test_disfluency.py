@@ -23,6 +23,7 @@ from pipeline.disfluency import (
     extract_features,
     windows,
 )
+from tests.conftest import requires_librosa
 
 
 def tone(seconds: float = WINDOW_SECONDS, frequency: float = 180.0, amplitude: float = 0.3):
@@ -88,6 +89,13 @@ class TestCoachingNotPenalty:
 
 
 class TestFeatureContract:
+    """Only the tests that actually call the extractor need the audio tier.
+
+    The label-order and name-count assertions are pure declarations and must run
+    on every install: they are what stops someone reordering LABELS and silently
+    remapping every prediction the trained model makes.
+    """
+
     def test_label_order_is_fixed(self) -> None:
         """The model's output vector is indexed by this. Reordering silently
         remaps every prediction — append only, never reorder."""
@@ -103,26 +111,32 @@ class TestFeatureContract:
         assert len(FEATURE_NAMES) == N_FEATURES
         assert len(set(FEATURE_NAMES)) == N_FEATURES, "duplicate feature name"
 
+    @requires_librosa
     def test_vector_shape_is_stable(self) -> None:
         assert extract_features(tone()).shape == (N_FEATURES,)
 
+    @requires_librosa
     def test_output_is_always_finite(self) -> None:
         """NaN in a feature vector poisons training silently."""
         for signal in [tone(), np.zeros(3 * SAMPLE_RATE, np.float32), with_gap(0.5, 2.5)]:
             assert np.isfinite(extract_features(signal)).all()
 
+    @requires_librosa
     def test_silence_returns_zeros_rather_than_failing(self) -> None:
         result = extract_features(np.zeros(3 * SAMPLE_RATE, dtype=np.float32))
         assert result.shape == (N_FEATURES,)
         assert not result.any()
 
+    @requires_librosa
     def test_short_input_is_padded_not_stretched(self) -> None:
         """Stretching would change the very rhythm the model measures."""
         assert extract_features(tone(0.5)).shape == (N_FEATURES,)
 
+    @requires_librosa
     def test_long_input_is_truncated_to_the_window(self) -> None:
         assert extract_features(tone(10.0)).shape == (N_FEATURES,)
 
+    @requires_librosa
     def test_is_deterministic(self) -> None:
         signal = with_gap(1.0, 1.8)
         assert np.array_equal(extract_features(signal), extract_features(signal))
@@ -131,6 +145,7 @@ class TestFeatureContract:
 # ── Does the feature set actually see the events? ─────────────────────────────
 
 
+@requires_librosa
 class TestDiscrimination:
     def test_silence_features_detect_a_block(self) -> None:
         """A block IS a silent closure. If these features cannot see one, the
@@ -159,6 +174,60 @@ class TestDiscrimination:
         loud = named(extract_features(tone(amplitude=0.6)))
 
         assert loud["rms_mean"] > quiet["rms_mean"]
+
+
+class TestArtefactContract:
+    """The serving code must load exactly what the training notebook writes.
+
+    This is the other half of train/serve parity, and the half that is usually
+    discovered on the day the weights arrive: the features matched, and then
+    nothing could open the files. The notebook is the contract — whoever runs
+    training follows it — so the serving side is what must match.
+    """
+
+    def _notebook_source(self) -> str:
+        import json
+        from pathlib import Path
+
+        notebook = (
+            Path(__file__).resolve().parents[1]
+            / "training"
+            / "notebooks"
+            / "train_disfluency.ipynb"
+        )
+        cells = json.loads(notebook.read_text(encoding="utf-8"))["cells"]
+        return "\n".join("".join(cell["source"]) for cell in cells)
+
+    def test_the_loader_expects_the_filenames_the_notebook_writes(self) -> None:
+        from pipeline.disfluency import model_filename
+
+        source = self._notebook_source()
+
+        # The notebook writes `disfluency_{label}.onnx` in a loop over labels.
+        assert "disfluency_{label}.onnx" in source
+        for label in LABELS:
+            assert model_filename(label) == f"disfluency_{label}.onnx"
+
+    def test_the_loader_reads_the_metrics_file_the_notebook_writes(self) -> None:
+        from pipeline.disfluency import METRICS_FILE
+
+        assert METRICS_FILE in self._notebook_source()
+
+    def test_the_notebook_records_per_class_thresholds(self) -> None:
+        """A single 0.5 across five imbalanced classes silences the rare ones,
+        and the rarest is `block` — the event P5 most needs recognised."""
+        assert "'thresholds': thresholds" in self._notebook_source()
+
+    def test_capability_is_false_without_the_artefacts(self) -> None:
+        """Honest by default on a fresh clone. Claiming the capability without
+        the weights would show a learner invented cues about speech nobody
+        analysed."""
+        from pipeline.disfluency import model_status
+
+        status = model_status()
+        assert isinstance(status.available, bool)
+        if not status.available:
+            assert "training" in status.detail or "onnxruntime" in status.detail
 
 
 class TestWindows:

@@ -18,6 +18,7 @@ from pipeline.preprocess import (
     preprocess,
 )
 from pipeline.runner import capabilities
+from tests.conftest import requires_g2p
 
 
 def wav_bytes(
@@ -86,9 +87,21 @@ class TestNormalise:
         assert result[600] / result[100] == pytest.approx(5.0, rel=1e-4)
 
 
+@requires_g2p
 class TestG2p:
-    def test_is_available(self) -> None:
+    """Skipped, with a reason, on a host where the CMUdict corpora are absent.
+
+    `is_available` is deliberately not asserted True here. It reports what this
+    host can genuinely do, and a test that demanded True would be asserting the
+    developer's install rather than the code — which is exactly the assumption
+    that made `/capabilities` lie in the first place.
+    """
+
+    def test_available_means_phonemisation_actually_runs(self) -> None:
+        """The bug this replaces: the old probe only constructed the backend,
+        which succeeds without the corpora and then raises on first call."""
         assert g2p.is_available() is True
+        assert g2p.phonemise("test")
 
     def test_phonemises_a_phrase(self) -> None:
         phones = g2p.phonemise("Good morning.")
@@ -141,14 +154,34 @@ class TestCapabilities:
         if not result["forced_alignment"]:
             assert result["gop"] is False
 
-    def test_stages_needing_a_trained_model_are_false(self) -> None:
-        """disfluency and ppi require the M7 classifier, which has not been
-        trained. Reporting them true would leave a learner on a spinner."""
+    def test_disfluency_needs_the_trained_classifier(self) -> None:
+        """Disfluency requires the SEP-28k classifier, which is the one thing
+        here that cannot be produced by writing code. Reporting it true without
+        the artefact would leave a learner on a spinner — or worse, would show
+        them coaching cues about speech nobody analysed."""
+        from pipeline.disfluency import model_status
+
         result = capabilities()
-        assert result["disfluency"] is False
-        assert result["ppi"] is False
+        assert result["disfluency"] is model_status().available
+
+    def test_ppi_follows_its_measurable_dimensions(self) -> None:
+        """The index needs at least one measurable dimension, not all of them.
+
+        A learner with no ASR available still gets a rhythm trend from prosody
+        alone, and that is a real result rather than a placeholder. Claiming
+        ppi while nothing at all can be measured would be the dishonest case.
+        """
+        from pipeline import prosody
+
+        result = capabilities()
+        assert result["ppi"] is (prosody.is_available() or result["asr"])
+
+    def test_personalisation_needs_a_configured_adapter_directory(self) -> None:
+        """M8 stage (c). Unconfigured by default, so base ASR is what runs."""
+        assert capabilities()["personalised_asr"] is False
 
 
+@requires_g2p
 class TestUniformAlignmentFallback:
     def test_spreads_phones_across_the_utterance(self) -> None:
         phones = g2p.phonemise("Good morning.")

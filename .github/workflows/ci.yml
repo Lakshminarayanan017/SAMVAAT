@@ -112,18 +112,30 @@ jobs:
       - run: pip install -r requirements-dev.txt
         working-directory: services/speech
 
+      # g2p_en fetches its CMUdict and tagger corpora on first call, not on
+      # import. Without this step the phonemiser reports itself unavailable and
+      # every GOP test skips — a green build that proved nothing.
+      - name: Warm the phonemiser corpora
+        working-directory: services/speech
+        run: python -m scripts.warm_g2p
+
       - run: ruff check .
         working-directory: services/speech
 
       - run: pytest -q
         working-directory: services/speech
 
-      # The eval table every speech PR must include. Printed into the job summary
+      # The eval table every speech PR must include, printed into the job summary
       # so reviewers see it without checking out the branch.
-      - name: Speech eval
+      #
+      # `--gates` makes this a gate rather than a report: the PPI monotonicity
+      # and disfluency-invariance checks are properties of our own scoring maths,
+      # need no licensed corpus, and are the proof behind ADR-0003. A build that
+      # breaks them fails here.
+      - name: Speech eval and fairness gates
         working-directory: services/speech
         run: |
-          python -m eval.harness --set atypical >> "$GITHUB_STEP_SUMMARY"
+          python -m eval.harness --set atypical --gates | tee -a "$GITHUB_STEP_SUMMARY"
 
   web:
     name: web · lint, typecheck, tests and build
