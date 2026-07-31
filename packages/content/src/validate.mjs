@@ -180,9 +180,13 @@ console.log(`  ${'TOTAL'.padEnd(30)} ${String(blocks.length).padStart(5)} ${Stri
 
 console.log('');
 console.log(`  difficulty 1-5      ${difficulty.join(' / ')}`);
-console.log(`  with pictographs    ${withSymbols}/${blocks.length}`);
-console.log(`  with phonemes       ${withPhonemes}/${blocks.length}   ${dim('(G2P pass pending — needed for GOP scoring, M6)')}`);
-console.log(`  with ISL clips      ${withIsl}/${blocks.length}   ${dim('(recording sessions pending, M3 assets)')}`);
+// Notes are conditional: a report that still says "pending" after the work is
+// done teaches the team to stop reading it.
+const note = (have, pending) => (have === blocks.length ? green('complete') : dim(pending));
+
+console.log(`  with pictographs    ${withSymbols}/${blocks.length}   ${note(withSymbols, '(symbol mapping incomplete)')}`);
+console.log(`  with phonemes       ${withPhonemes}/${blocks.length}   ${note(withPhonemes, '(run services/speech: python -m scripts.generate_phonemes --write)')}`);
+console.log(`  with ISL clips      ${withIsl}/${blocks.length}   ${note(withIsl, '(recording sessions pending — needs a Deaf signer)')}`);
 
 // ── RESULT ────────────────────────────────────────────────────────────────────
 

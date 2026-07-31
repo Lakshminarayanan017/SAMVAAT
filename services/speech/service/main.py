@@ -86,6 +86,9 @@ async def healthz() -> Health:
 
 @app.get("/capabilities", response_model=Capabilities, summary="Which pipeline stages are live")
 async def capabilities() -> Capabilities:
-    # Every stage is false until the module that implements it lands. Flipping a
-    # flag here without a passing eval run in CI is a review failure.
-    return Capabilities()
+    # Probed, never hard-coded: the answer depends on which optional backends
+    # are actually installed on this deployment. Flipping a flag by hand,
+    # without a passing eval run, is a review failure.
+    from pipeline.runner import capabilities as probe
+
+    return Capabilities(**probe())

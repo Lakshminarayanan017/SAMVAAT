@@ -1,0 +1,25 @@
+# SAMVAAD speech service — the heavy ML stack. OPTIONAL.
+#
+#   pip install -r requirements-ml.txt
+#
+# Roughly 2.5 GB, plus model weights downloaded on first use. Everything here is
+# imported lazily and probed at runtime: without it the service still boots, and
+# /capabilities reports the affected stages as unavailable so the client tells
+# the learner plainly rather than leaving them on a spinner.
+#
+# Install this when you are ready to run ASR, forced alignment or model training.
+
+-r requirements.txt
+
+torch>=2.4,<3.0
+torchaudio>=2.4,<3.0
+transformers>=4.44,<5.0
+
+# prosody and disfluency features (M7)
+praat-parselmouth>=0.4,<1.0
+librosa>=0.10,<1.0
+
+# training and experiment tracking (M7, M8)
+scikit-learn>=1.5,<2.0
+lightgbm>=4.5,<5.0
+mlflow>=2.16,<3.0
