@@ -26,10 +26,14 @@ production, and nothing errors. One function, one definition, both sides.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 
 import numpy as np
+
+log = logging.getLogger("samvaad.speech.disfluency")
 
 SAMPLE_RATE = 16_000
 
@@ -259,27 +263,180 @@ def windows(samples: np.ndarray, sample_rate: int = SAMPLE_RATE):
 # ── Inference ────────────────────────────────────────────────────────────────
 
 
+@dataclass(frozen=True)
+class ModelStatus:
+    available: bool
+    detail: str
+
+
+#: Filename per label inside the artefacts directory. This is the exact shape
+#: `training/notebooks/train_disfluency.ipynb` produces, and the notebook is the
+#: contract with whoever runs the training — so the serving side matches the
+#: artefact rather than the other way round.
+def model_filename(label: str) -> str:
+    return f"disfluency_{label}.onnx"
+
+
+#: Written alongside the models by the training run. Carries the per-class
+#: thresholds, which matter: a single 0.5 threshold across five imbalanced
+#: classes collapses the rare ones to "never fires", and the rare one here is
+#: `block`, which is the event P5 most needs recognised.
+METRICS_FILE = "metrics.json"
+
+
+@lru_cache(maxsize=1)
+def model_status() -> ModelStatus:
+    """Is the trained classifier actually present on this host?
+
+    Reported by `/capabilities`, and the answer is "no" on a fresh clone. That
+    is deliberate and it is the honest state: the SEP-28k training run is the
+    one piece of this system that cannot be produced by writing code, and
+    claiming the capability without the weights would leave a learner watching a
+    spinner for feedback that is never coming — or worse, seeing invented
+    coaching cues about speech nobody analysed.
+
+    See services/speech/training/README.md for the training command, and
+    docs/TRAINING_HANDOFF.md for datasets, hardware and expected duration.
+    """
+    try:
+        import onnxruntime  # noqa: F401
+    except ImportError:
+        return ModelStatus(False, "onnxruntime not installed (requirements-ml.txt)")
+
+    from service.config import get_settings
+
+    directory = get_settings().artifacts_dir
+
+    missing = [label for label in LABELS if not (directory / model_filename(label)).exists()]
+    if missing:
+        return ModelStatus(
+            False,
+            f"no trained classifier in {directory} (missing: {', '.join(missing)}); "
+            "see services/speech/training/README.md",
+        )
+
+    return ModelStatus(True, _version_from_metrics(directory))
+
+
+def _version_from_metrics(directory) -> str:
+    """A recordable version string for `speech_attempts.model_versions`.
+
+    Uses the training timestamp and macro-F1 from the run itself, so a score
+    stays interpretable after a model upgrade: "which model produced this, and
+    how good was it" is answerable two years later from the attempt row alone.
+    """
+    import json
+
+    path = directory / METRICS_FILE
+    if not path.exists():
+        return "disfluency/unversioned"
+
+    try:
+        metrics = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "disfluency/unreadable-metrics"
+
+    trained = str(metrics.get("trained_at", "unknown"))[:10]
+    return f"disfluency/{trained}/macro_f1={metrics.get('macro_f1', 0):.3f}"
+
+
+@lru_cache(maxsize=1)
+def load_model() -> DisfluencyModel:
+    """The classifier, loaded once and cached.
+
+    Raises rather than returning a stand-in. A stand-in that emitted plausible
+    events would put invented coaching cues in front of a learner about speech
+    they did not produce, and nothing downstream could tell the difference.
+    Callers check `model_status()` first; the runner does, and skips the stage
+    with a reason the client can show.
+    """
+    from service.config import get_settings
+
+    settings = get_settings()
+    status = model_status()
+
+    if not status.available:
+        raise RuntimeError(f"Disfluency classifier unavailable: {status.detail}")
+
+    log.info("loading disfluency classifier from %s", settings.artifacts_dir)
+    return DisfluencyModel(
+        settings.artifacts_dir,
+        default_threshold=settings.disfluency_threshold,
+    )
+
+
 class DisfluencyModel:
     """ONNX wrapper around the trained classifier.
 
-    The model file is produced by training/notebooks/train_disfluency.ipynb and
-    dropped into services/speech/artifacts/. It is not in version control:
-    weights belong in the model registry, not in git.
+    One binary classifier per event type, because the task is multi-label: a
+    single clip can contain a block AND a prolongation, and forcing one choice
+    throws away real signal.
+
+    The artefacts are produced by `training/notebooks/train_disfluency.ipynb`
+    and dropped into `services/speech/artifacts/`. They are not in version
+    control: weights belong in the model registry, not in git.
     """
 
-    def __init__(self, model_path: str, threshold: float = 0.5) -> None:
+    def __init__(self, artifacts_dir, default_threshold: float = 0.5) -> None:
+        import json
+
         import onnxruntime
 
-        self.session = onnxruntime.InferenceSession(
-            model_path, providers=["CPUExecutionProvider"]
-        )
-        self.threshold = threshold
-        self.input_name = self.session.get_inputs()[0].name
+        options = onnxruntime.SessionOptions()
+        # One thread per session. The service runs several requests
+        # concurrently on a small CPU host, and letting five sessions each
+        # spawn a thread pool turns a 200 ms inference into a scheduling storm.
+        options.intra_op_num_threads = 1
+
+        self.sessions = {
+            label: onnxruntime.InferenceSession(
+                str(artifacts_dir / model_filename(label)),
+                sess_options=options,
+                providers=["CPUExecutionProvider"],
+            )
+            for label in LABELS
+        }
+
+        self.input_names = {
+            label: session.get_inputs()[0].name for label, session in self.sessions.items()
+        }
+
+        # Per-class thresholds tuned on the validation split during training.
+        # Falling back to one global value is safe but blunt, so the fallback is
+        # logged rather than silent.
+        self.thresholds = dict.fromkeys(LABELS, default_threshold)
+
+        metrics_path = artifacts_dir / METRICS_FILE
+        if metrics_path.exists():
+            try:
+                tuned = json.loads(metrics_path.read_text(encoding="utf-8")).get("thresholds")
+                if isinstance(tuned, dict):
+                    self.thresholds.update(
+                        {label: float(value) for label, value in tuned.items() if label in LABELS}
+                    )
+            except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
+                log.warning(
+                    "could not read tuned thresholds (%s); using %s",
+                    error,
+                    default_threshold,
+                )
+        else:
+            log.warning(
+                "%s not found; using the single default threshold %.2f for all five event "
+                "types, which under-detects the rare ones",
+                metrics_path,
+                default_threshold,
+            )
 
     def predict_window(self, samples: np.ndarray) -> dict[str, float]:
         features = extract_features(samples).reshape(1, -1)
-        probabilities = self.session.run(None, {self.input_name: features})[0][0]
-        return dict(zip(LABELS, (float(p) for p in probabilities), strict=True))
+
+        probabilities: dict[str, float] = {}
+        for label, session in self.sessions.items():
+            outputs = session.run(None, {self.input_names[label]: features})
+            probabilities[label] = _positive_probability(outputs)
+
+        return probabilities
 
     def detect(self, samples: np.ndarray, sample_rate: int = SAMPLE_RATE) -> list[DisfluencyEvent]:
         """Scan an utterance and return events, each with its coaching cue.
@@ -292,7 +449,7 @@ class DisfluencyModel:
 
         for offset, window in windows(samples, sample_rate):
             for label, probability in self.predict_window(window).items():
-                if probability < self.threshold:
+                if probability < self.thresholds[label]:
                     continue
 
                 event_type = DisfluencyType(label)
@@ -310,3 +467,21 @@ class DisfluencyModel:
                 )
 
         return events
+
+
+def _positive_probability(outputs: list) -> float:
+    """Pull P(event) out of whatever shape skl2onnx produced.
+
+    Exported scikit-learn classifiers emit `[labels, probabilities]` with
+    `zipmap=False`, so the probabilities are the second output and the positive
+    class is column 1. Older exports emit only probabilities. Handling both
+    means a re-export with a different skl2onnx version does not silently start
+    reading the *negative* class — which would invert every prediction and look,
+    from the outside, exactly like a badly trained model.
+    """
+    candidate = outputs[1] if len(outputs) > 1 else outputs[0]
+    row = np.asarray(candidate)[0]
+
+    if row.ndim == 0:
+        return float(row)
+    return float(row[-1]) if row.shape[0] >= 2 else float(row[0])
