@@ -8,14 +8,14 @@ module rather than a separate deployment - see docs/ADR/0004.
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import health, practice
+from app.routers import audio, health, practice
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +25,7 @@ log = logging.getLogger("samvaad.api")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     settings = get_settings()
     log.info("starting %s v%s (%s)", settings.service_name, settings.version, settings.environment)
 
@@ -66,6 +66,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(practice.router)
+    app.include_router(audio.router)
 
     return app
 

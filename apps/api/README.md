@@ -103,6 +103,52 @@ defeats the protection the cap exists for.
 
 ---
 
+## Audio, consent and retention (M5)
+
+```
+POST   /audio/upload-url      -> an upload ticket, with a TTL and a plain-language notice
+POST   /audio/consent         -> grant or revoke one purpose
+GET    /audio/consent/{user}  -> what this learner has agreed to
+POST   /audio/purge           -> run the retention job
+DELETE /audio/user/{user}     -> erase a learner's audio
+```
+
+**The API never receives audio bytes.** The client uploads directly to object storage; this
+service records only that an object exists and when it must be destroyed.
+
+### Ethics E3, as code
+
+> Raw audio is deleted within 24 hours of feature extraction, unless the learner has given
+> separate, explicit, independently revocable consent to contribute to the research corpus.
+
+Retention is a **TTL stamped at write time plus a job that enforces it** — not a sentence in a
+policy, and not a promise someone has to remember. Every stored object carries a
+[`RetentionReason`](app/security/retention.py); an object without one cannot be written.
+
+| Reason | Lifetime | Requires |
+|---|---|---|
+| `processing` | **24 h**, hard ceiling | `speech_processing` |
+| `learner_review` | 30 days | `store_audio_for_review` |
+| `research_corpus` | While consent stands | `research_corpus` |
+
+A test asserts the 24-hour constant directly, so raising it breaks the build rather than
+quietly weakening the guarantee.
+
+### Consent is enforced at the query layer
+
+Not at the UI layer — a UI check is one forgotten conditional away from a silent leak.
+[`require_consent`](app/security/consent.py) is called by the code that actually touches the
+data, so forgetting is not possible.
+
+Purposes are **separate and independently revocable**, because they are genuinely different
+decisions: a learner may be happy for a trainer to hear a recording and entirely unwilling for
+it to enter a research corpus. Collapsing those into one "I agree" is not consent.
+
+**Revocation deletes immediately.** Consent you can withdraw without the data going with it is
+a preference, not consent.
+
+---
+
 ## Health endpoints
 
 | Endpoint | Purpose | Checks dependencies? |

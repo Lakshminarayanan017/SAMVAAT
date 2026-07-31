@@ -1,25 +1,32 @@
 /**
  * Spoken input.
  *
- * Three things here are deliberate and none of them are negotiable:
+ * Capture, resampling and quality analysis live in `@/audio`; this adapter is
+ * the conversation around them. Four things here are deliberate:
  *
- *  1. NO RECORDING TIME LIMIT. Not a long one — none. P3 (dysarthria) and P5
- *     (stammer) may need many seconds for one sentence, and a countdown is the
- *     single fastest way to make this product unusable for them (Ethics E6).
+ *  1. THE QUALITY CHECK COMES FIRST. The microphone is opened and the room
+ *     measured before the learner speaks. Ten attempts in a noisy room produce
+ *     ten bad scores and a learner who reasonably concludes the app does not
+ *     understand them — when the real problem was a microphone two metres away.
  *
- *  2. HONEST DEGRADATION. If the speech service reports no ASR, we say so
+ *  2. NO RECORDING TIME LIMIT. Not a long one, none. A learner with dysarthria
+ *     or a stammer may need thirty seconds for one sentence (Ethics E6).
+ *
+ *  3. HONEST DEGRADATION. If the speech service reports no ASR, we say so
  *     plainly and point at the alternative, rather than accepting a recording
  *     that will never be transcribed.
  *
- *  3. NEVER SCORED ON A BAD TRANSCRIPTION. Below the confidence threshold the
+ *  4. NEVER SCORED ON A BAD TRANSCRIPTION. Below the confidence threshold the
  *     learner is asked to confirm what they meant. Marking a misrecognised
- *     answer wrong is exactly how mainstream speech tools fail atypical
- *     speakers, and it is the failure this product exists to correct.
+ *     answer wrong is how mainstream speech tools fail atypical speakers, and
+ *     it is the failure this product exists to correct.
  */
 import { useCallback, useRef, useState } from 'react';
 import type { LearnerResponse } from '@samvaad/contracts';
 
 import { useAnnounce } from '@/a11y/Announcer';
+import { InputQualityMeter } from '@/audio/InputQualityMeter';
+import { useAudioRecorder, type Recording } from '@/audio/useAudioRecorder';
 import { useSpeechCapabilities } from '@/services/capabilities';
 
 import type { InputAdapterProps } from '../registry';
@@ -27,14 +34,10 @@ import { buildResponse, needsConfirmation } from '../response';
 import { submitButtonStyle } from './TextInput';
 
 /** Injected by the session layer once the speech service is wired up (M6). */
-export type Transcriber = (audio: Blob, blockId: string) => Promise<{
-  text: string;
-  confidence: number;
-  audioRef?: string;
-  model?: string;
-}>;
-
-type Phase = 'idle' | 'recording' | 'transcribing' | 'confirming';
+export type Transcriber = (
+  audio: Blob,
+  blockId: string,
+) => Promise<{ text: string; confidence: number; audioRef?: string; model?: string }>;
 
 export interface SpeechInputProps extends InputAdapterProps {
   transcribe?: Transcriber;
@@ -51,115 +54,89 @@ export function SpeechInput({
   const { speech, loaded } = useSpeechCapabilities();
   const announce = useAnnounce();
 
-  const [phase, setPhase] = useState<Phase>('idle');
   const [pending, setPending] = useState<LearnerResponse | null>(null);
+  const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [attempts, setAttempts] = useState(1);
+  const attemptsRef = useRef(1);
+  const startedAtRef = useRef(new Date());
 
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const startedAt = useRef(new Date());
+  const handleRecording = useCallback(
+    async (recording: Recording) => {
+      if (!transcribe) return;
+
+      setTranscribing(true);
+      announce('Listening to your answer');
+
+      try {
+        const result = await transcribe(recording.wav, block.id);
+        const response = buildResponse({
+          block,
+          profile,
+          sessionId,
+          inputMode: 'speech',
+          text: result.text,
+          startedAt: startedAtRef.current,
+          attempts: attemptsRef.current,
+          confidence: result.confidence,
+          raw: {
+            ...(result.audioRef ? { audio_ref: result.audioRef } : {}),
+            asr_text: result.text,
+            ...(result.model ? { asr_model: result.model } : {}),
+          },
+        });
+
+        if (needsConfirmation(response)) {
+          // Not an error and not a failure — uncertainty we refuse to resolve
+          // on the learner's behalf.
+          setPending(response);
+          announce('Please check what I heard');
+        } else {
+          onResponse(response);
+          attemptsRef.current += 1;
+          startedAtRef.current = new Date();
+          announce('Answer sent');
+        }
+      } catch {
+        setError('Your answer could not be processed. Please try again, or type it instead.');
+      } finally {
+        setTranscribing(false);
+      }
+    },
+    [announce, block, onResponse, profile, sessionId, transcribe],
+  );
+
+  const recorder = useAudioRecorder({ onRecording: handleRecording });
 
   const available = speech.asr && typeof transcribe === 'function' && supportsRecording();
-
-  const stop = useCallback(() => {
-    recorderRef.current?.stop();
-    recorderRef.current?.stream.getTracks().forEach((track) => track.stop());
-    recorderRef.current = null;
-  }, []);
-
-  const start = useCallback(async () => {
-    setError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-      });
-
-      const recorder = new MediaRecorder(stream);
-      chunksRef.current = [];
-      startedAt.current = new Date();
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-
-      recorder.onstop = async () => {
-        const audio = new Blob(chunksRef.current, { type: recorder.mimeType });
-        setPhase('transcribing');
-        announce('Listening to your answer');
-
-        try {
-          const result = await transcribe!(audio, block.id);
-          const response = buildResponse({
-            block,
-            profile,
-            sessionId,
-            inputMode: 'speech',
-            text: result.text,
-            startedAt: startedAt.current,
-            attempts,
-            confidence: result.confidence,
-            raw: {
-              ...(result.audioRef ? { audio_ref: result.audioRef } : {}),
-              asr_text: result.text,
-              ...(result.model ? { asr_model: result.model } : {}),
-            },
-          });
-
-          if (needsConfirmation(response)) {
-            // Not an error and not a failure — just uncertainty we refuse to
-            // resolve on the learner's behalf.
-            setPending(response);
-            setPhase('confirming');
-            announce('Please check what I heard');
-          } else {
-            onResponse(response);
-            setAttempts((n) => n + 1);
-            setPhase('idle');
-            announce('Answer sent');
-          }
-        } catch {
-          setError('Your answer could not be processed. Please try again, or type it instead.');
-          setPhase('idle');
-        }
-      };
-
-      recorder.start();
-      recorderRef.current = recorder;
-      setPhase('recording');
-      announce('Recording. Take as long as you need.');
-    } catch {
-      setError('The microphone is not available. Check permissions, or type your answer instead.');
-      setPhase('idle');
-    }
-  }, [announce, attempts, block, onResponse, profile, sessionId, transcribe]);
 
   if (loaded && !available) {
     return <SpeechUnavailable reason={speech.asr ? 'browser' : 'service'} />;
   }
 
-  if (phase === 'confirming' && pending) {
+  if (pending) {
     return (
       <ConfirmHeard
         response={pending}
         onAccept={() => {
           onResponse(pending);
           setPending(null);
-          setAttempts((n) => n + 1);
-          setPhase('idle');
+          attemptsRef.current += 1;
+          startedAtRef.current = new Date();
           announce('Answer sent');
         }}
         onRetry={() => {
           setPending(null);
-          setPhase('idle');
           announce('Try again');
         }}
       />
     );
   }
 
+  const recording = recorder.state === 'recording';
+  const busy = transcribing || recorder.state === 'processing';
+
   return (
-    <div data-input-mode="speech">
+    <div data-input-mode="speech" data-state={recorder.state}>
       <p style={{ margin: '0 0 var(--space-sm, 0.5rem)', color: 'var(--colour-fg-muted)' }}>
         Say: <strong style={{ color: 'var(--colour-fg)' }}>{block.canonical_text}</strong>
       </p>
@@ -167,24 +144,50 @@ export function SpeechInput({
         Take as long as you need. Recording does not stop on its own.
       </p>
 
-      {phase === 'recording' ? (
-        <button type="button" onClick={stop} style={submitButtonStyle(false)}>
-          Stop recording
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={start}
-          disabled={disabled || phase === 'transcribing'}
-          style={submitButtonStyle(Boolean(disabled) || phase === 'transcribing')}
-        >
-          {phase === 'transcribing' ? 'Working…' : 'Start recording'}
-        </button>
+      {recorder.quality && <InputQualityMeter quality={recorder.quality} />}
+
+      <div style={{ marginTop: 'var(--space-md, 1rem)', display: 'flex', gap: 'var(--space-sm, 0.5rem)', flexWrap: 'wrap' }}>
+        {recorder.state === 'idle' || recorder.state === 'error' ? (
+          <button
+            type="button"
+            onClick={() => void recorder.check()}
+            disabled={disabled}
+            style={submitButtonStyle(Boolean(disabled))}
+          >
+            Check my microphone
+          </button>
+        ) : recording ? (
+          <button type="button" onClick={recorder.stop} style={submitButtonStyle(false)}>
+            Stop recording
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={recorder.start}
+            // Blocked only when the microphone is genuinely dead — a noisy or
+            // quiet room is a hint, never a barrier.
+            disabled={disabled || busy || recorder.quality?.canRecord === false}
+            style={submitButtonStyle(
+              Boolean(disabled) || busy || recorder.quality?.canRecord === false,
+            )}
+          >
+            {busy ? 'Working…' : 'Start recording'}
+          </button>
+        )}
+      </div>
+
+      {recording && (
+        // Elapsed time is shown because a learner should know they are being
+        // recorded — it counts up, never down, and nothing happens when it
+        // reaches any particular number.
+        <p role="status" style={{ marginTop: 'var(--space-sm, 0.5rem)' }}>
+          Recording — {Math.floor(recorder.elapsedSeconds)} seconds
+        </p>
       )}
 
-      {error && (
-        <p role="alert" style={{ marginTop: 'var(--space-sm, 0.5rem)', color: 'var(--colour-fg)' }}>
-          {error}
+      {(error ?? recorder.error) && (
+        <p role="alert" style={{ marginTop: 'var(--space-sm, 0.5rem)' }}>
+          {error ?? recorder.error}
         </p>
       )}
     </div>
@@ -202,8 +205,8 @@ function ConfirmHeard({
 }) {
   return (
     <div data-input-mode="speech" data-phase="confirming">
-      {/* Framed as the tool's uncertainty, never as the learner's mistake.
-          "I heard" and not "you said". */}
+      {/* Framed as the tool's uncertainty, never the learner's mistake.
+          "I heard", not "you said". */}
       <p style={{ margin: 0 }}>I heard:</p>
       <p
         style={{

@@ -99,6 +99,42 @@ should have to make.
 
 ---
 
+## Audio capture (M5)
+
+`src/audio/` — the maths is pure and directly tested; the browser glue is thin.
+
+| File | What |
+|---|---|
+| [`wav.ts`](src/audio/wav.ts) | Mono mixdown, resampling, 16-bit PCM WAV encoding |
+| [`quality.ts`](src/audio/quality.ts) | Level, clipping, SNR, verdicts, silence trimming |
+| [`useAudioRecorder.ts`](src/audio/useAudioRecorder.ts) | MediaRecorder + Web Audio glue |
+| [`InputQualityMeter.tsx`](src/audio/InputQualityMeter.tsx) | The meter, carried four ways at once |
+
+**16 kHz mono, fixed.** Inconsistent input silently destroys every downstream metric —
+alignment drifts, GOP posteriors shift, speech-rate figures become meaningless. WAV rather
+than a compressed format, because lossy codecs discard exactly the spectral detail
+pronunciation scoring needs, and the artefacts fall hardest on atypical speech.
+
+**The quality check runs before the learner speaks.** Ten attempts in a noisy room produce ten
+bad scores and a learner who reasonably concludes the app cannot understand them — when the
+real problem was a microphone two metres away. Catching that first is worth more than any model
+improvement.
+
+> **Quality is measured against the room, never the speaker.** There is no check anywhere in
+> `quality.ts` for "clear enough" speech, and there must never be. We ask *can the microphone
+> hear you*, not *do you speak well enough* (Ethics E1). A test asserts no message ever
+> comments on the person.
+
+**Silence trimming keeps 300 ms of padding.** Not cosmetic: a stammering block often begins
+with a silent closure before the sound arrives, and trimming tightly would delete the exact
+event the disfluency detector needs to see.
+
+The meter carries its reading as a bar, a text verdict, an `aria-valuetext`, and a live-region
+announcement — throttled to fire only when the verdict *changes*, because a meter that
+announces every frame makes the page unusable with a screen reader.
+
+---
+
 ## Accessibility expectations
 
 Every PR: see [docs/ACCESSIBILITY.md](../../docs/ACCESSIBILITY.md). In short —
