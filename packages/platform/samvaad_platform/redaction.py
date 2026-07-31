@@ -80,9 +80,20 @@ _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 _BEARER = re.compile(r"(?i)bearer\s+[\w\-._~+/]+=*")
 
 
+#: Split camelCase, but keep acronym runs together. The naive
+#: `(?<!^)(?=[A-Z])` turns `TRANSCRIPT` into `t_r_a_n_s_c_r_i_p_t`, which matches
+#: nothing — so an all-caps key sails straight through unredacted. That matters:
+#: header maps and `os.environ` are routinely logged whole, and they carry
+#: `AUTHORIZATION`, `API_KEY` and `PASSWORD` in exactly that shape.
+_WORD_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+
 def _normalise(key: str) -> str:
-    """`canonicalText` and `canonical_text` are the same field."""
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", key).lower().strip("_")
+    """`canonicalText`, `canonical_text`, `CANONICAL_TEXT` and
+    `Canonical-Text` are all the same field."""
+    key = str(key).strip().replace("-", " ").replace(" ", "_")
+    key = _WORD_BOUNDARY.sub("_", key)
+    return re.sub(r"_+", "_", key).lower().strip("_")
 
 
 def is_sensitive(key: str) -> bool:

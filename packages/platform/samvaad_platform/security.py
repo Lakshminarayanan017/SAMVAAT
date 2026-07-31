@@ -34,7 +34,11 @@ def constant_time_compare(left: str, right: str) -> bool:
     return hmac.compare_digest(left.encode("utf-8"), right.encode("utf-8"))
 
 
-def service_token_dependency(env_var: str = "SERVICE_TOKEN", *, required_in: tuple[str, ...] = ("production", "staging")):
+def service_token_dependency(
+    env_var: str = "SERVICE_TOKEN",
+    *,
+    required_in: tuple[str, ...] = ("production", "staging"),
+):
     """Build a FastAPI dependency that checks the shared service token.
 
     Unset in development so a fresh clone runs with no configuration at all —

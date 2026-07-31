@@ -32,7 +32,7 @@ All scoring is **baseline-relative**: measured against the learner's own rolling
 > learner correctly concludes the tool is useless and leaves. Comparison to a norm they were
 > never going to meet is not assessment; it is discouragement with a number attached.
 
-**Enforced by** · `services/speech/tests/test_ppi_no_reference_comparison.py`
+**Enforced by** · `services/speech/tests/test_ppi.py` — `TestNoReferenceComparison`
 **Implemented in** · `services/speech/pipeline/ppi.py` (M7)
 
 ---
@@ -84,7 +84,7 @@ Enforcement is architectural, in four independent layers:
 > scoring exactly these traits. We are building an interview scorer for disabled people. If we
 > reproduce that behaviour we have built the harm we set out to prevent.
 
-**Enforced by** · `services/genai/tests/test_rubric_disfluency_invariance.py`
+**Enforced by** · `services/genai/tests/test_rubric.py` — `TestDisfluencyInvariance`
 **Implemented in** · `services/genai/rubric/` (M11)
 
 #### The disfluency-invariance test
@@ -124,7 +124,8 @@ Camera input — for Indian Sign Language recognition, and for the optional post
 is processed entirely on-device. Only the resulting label or cue leaves the client. No video
 frame is transmitted, stored, or logged, at any quality, for any purpose, ever.
 
-**Enforced by** · `apps/web/tests/e2e/no-video-egress.spec.ts` (asserts on network traffic)
+**NOT YET ENFORCED** · no camera code exists yet. The test lands with sign
+input in M16 and must assert on network traffic, not on intent.
 **Implemented in** · `apps/web/src/modality/input/SignInput` (M16)
 
 ---
@@ -137,8 +138,9 @@ its author, and its stated reason are persisted.
 AI is a co-pilot to the special educator, never a replacement. The override rate is also our
 most honest quality metric — see `docs/EXECUTION_PLAN.md` §16.
 
-**Enforced by** · `apps/api/tests/test_trainer_override.py`
-**Implemented in** · `apps/api/app/routers/feedback.py` (M14)
+**NOT YET ENFORCED** · there is no trainer surface yet. The test lands with
+the dashboards in M14.
+**To be implemented in** · the trainer feedback router, with the dashboards (M14)
 
 ---
 
@@ -154,7 +156,10 @@ patience — **never through speed**.
 > dysarthria, with a stammer, with a motor impairment, or with an intellectual disability. It
 > excludes three of our five personas in one design decision.
 
-**Enforced by** · `apps/web/tests/test_no_timers.ts` (static check for timer APIs in feature code)
+**Enforced by** · `apps/api/tests/test_learning.py` —
+`test_derive_grade_cannot_see_timing_at_all`, which asserts the grader has no
+timing parameter at all, and `apps/api/tests/test_practice_api.py` —
+`test_the_review_endpoint_accepts_no_timing_field`.
 
 ---
 
@@ -165,7 +170,9 @@ P3 dysarthric with motor impairment, P4 intellectual disability, P5 stammer.
 
 "Works" means completable, not merely renderable.
 
-**Enforced by** · the persona walkthrough suite, `apps/web/tests/personas/`, run every sprint.
+**Enforced by** · `apps/web/tests/modality/ModalityRouter.test.tsx` (every persona
+can receive a lesson) and `apps/web/tests/modality/ModalityInput.test.tsx` (every
+persona can answer one), run on every push.
 A regression here is a P0 bug, above all other work.
 
 ---

@@ -137,6 +137,52 @@ jobs:
         run: |
           python -m eval.harness --set atypical --gates | tee -a "$GITHUB_STEP_SUMMARY"
 
+  genai:
+    name: genai · lint and tests
+    runs-on: ubuntu-latest
+    needs: contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: services/genai/requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+        working-directory: services/genai
+
+      - run: ruff check .
+        working-directory: services/genai
+
+      # Includes TestDisfluencyInvariance, which proves the interview rubric
+      # cannot be moved by a learner's stammer. It is the fairness claim the
+      # product is built on, and until now it was never run by CI.
+      - run: pytest -q
+        working-directory: services/genai
+
+  platform:
+    name: platform · lint and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: pip install -e . ruff pytest
+        working-directory: packages/platform
+
+      - run: ruff check .
+        working-directory: packages/platform
+
+      # Redaction and service auth are privacy- and security-critical and are
+      # shared by every service, so a regression here is a regression everywhere.
+      - run: pytest -q
+        working-directory: packages/platform
+
   web:
     name: web · lint, typecheck, tests and build
     runs-on: ubuntu-latest
@@ -191,5 +237,24 @@ jobs:
           for rule in E1 E2 E3 E4 E5 E6 E7; do
             grep -q "### $rule ·" docs/ETHICS_CHARTER.md \
               || { echo "::error::rule $rule missing from the charter"; missing=1; }
+          done
+          exit $missing
+
+      # The charter cites the file that enforces each rule. Those citations rot
+      # as tests move, and a charter pointing at files that do not exist is
+      # documentation pretending to be a control - you cannot check enforcement
+      # by following it. Six of seven had already gone stale once.
+      #
+      # A rule with no enforcement yet must say NOT YET ENFORCED rather than
+      # cite a file that was never written.
+      - name: Every path the charter cites actually exists
+        run: |
+          missing=0
+          for path in $(grep -oE '`[a-z][a-zA-Z0-9_/.-]+\.(py|tsx|ts)`' docs/ETHICS_CHARTER.md \
+                        | tr -d '`' | sort -u); do
+            if [ ! -e "$path" ]; then
+              echo "::error::ETHICS_CHARTER.md cites '$path', which does not exist"
+              missing=1
+            fi
           done
           exit $missing
