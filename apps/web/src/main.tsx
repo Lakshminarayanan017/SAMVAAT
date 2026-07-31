@@ -4,6 +4,7 @@ import type { ContentBlock } from '@samvaad/contracts';
 
 import { AnnouncerProvider } from '@/a11y/Announcer';
 import { ChannelComparison } from '@/features/channel-comparison/ChannelComparison';
+import { CapabilitiesProvider } from '@/services/capabilities';
 import { applyTheme } from '@/design-system/tokens';
 import './styles/global.css';
 
@@ -26,11 +27,13 @@ if (!root) throw new Error('#root not found');
 
 createRoot(root).render(
   <StrictMode>
-    <AnnouncerProvider>
-      <a href="#main" className="skip-link">
-        Skip to main content
-      </a>
-      <ChannelComparison block={blockFixture as unknown as ContentBlock} />
-    </AnnouncerProvider>
+    <CapabilitiesProvider>
+      <AnnouncerProvider>
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
+        <ChannelComparison block={blockFixture as unknown as ContentBlock} />
+      </AnnouncerProvider>
+    </CapabilitiesProvider>
   </StrictMode>,
 );

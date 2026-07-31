@@ -11,10 +11,15 @@
  * learner's profile decide.
  */
 import { useState } from 'react';
-import type { CommunicationAbilityProfile, ContentBlock, OutputChannel } from '@samvaad/contracts';
+import type {
+  CommunicationAbilityProfile,
+  ContentBlock,
+  LearnerResponse,
+  OutputChannel,
+} from '@samvaad/contracts';
 
 import { ProfileProvider } from '@/a11y/ProfileProvider';
-import { ModalityRouter } from '@/modality';
+import { ModalityInput, ModalityRouter } from '@/modality';
 
 import { PERSONAS, type Persona } from './personas';
 
@@ -28,6 +33,7 @@ const CHANNELS: { channel: OutputChannel; label: string; serves: string }[] = [
 
 export function ChannelComparison({ block }: { block: ContentBlock }) {
   const [personaId, setPersonaId] = useState<string>(PERSONAS[0]!.id);
+  const [lastResponse, setLastResponse] = useState<LearnerResponse | null>(null);
   const persona = PERSONAS.find((p) => p.id === personaId) ?? PERSONAS[0]!;
 
   return (
@@ -60,8 +66,37 @@ export function ChannelComparison({ block }: { block: ContentBlock }) {
               changes, rather than reconciling two different renderings. */}
           <ProfileProvider key={persona.id} initialProfile={persona.profile}>
             <ModalityRouter block={block} />
+
+            <hr
+              style={{
+                border: 0,
+                borderTop: '1px solid var(--colour-border)',
+                margin: 'var(--space-lg, 1.5rem) 0',
+              }}
+            />
+
+            <ModalityInput
+              block={block}
+              sessionId="demo-session"
+              onResponse={(response) => setLastResponse(response)}
+            />
           </ProfileProvider>
         </div>
+
+        {lastResponse && (
+          <div style={{ ...panelStyle, marginTop: 'var(--space-md, 1rem)' }}>
+            <h3 style={{ margin: '0 0 var(--space-sm, 0.5rem)', fontSize: '1.125rem' }}>
+              What the scoring engine receives
+            </h3>
+            <p style={{ margin: '0 0 var(--space-sm, 0.5rem)', color: 'var(--colour-fg-muted)' }}>
+              Typed, tapped as symbols or selected by switch — the shape is identical, which is
+              why one scoring engine serves every learner.
+            </p>
+            <pre style={{ overflowX: 'auto', fontSize: '0.9rem', margin: 0 }}>
+              <code>{JSON.stringify(lastResponse, null, 2)}</code>
+            </pre>
+          </div>
+        )}
       </section>
 
       <section aria-labelledby="all-channels" style={{ marginTop: 'var(--space-xl, 2.5rem)' }}>

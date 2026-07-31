@@ -31,6 +31,37 @@ export const FALLBACK_CHAIN: Record<OutputChannel, OutputChannel[]> = {
   captioned_text: [],
 };
 
+/**
+ * Normalise an answer into the comparable `canonical_text` every input mode
+ * produces (ADR-0002).
+ *
+ * This is the single most load-bearing function in the response path: typing,
+ * speaking, signing and tapping symbols all pass through it, and scoring
+ * compares the result. If the client and the scoring engine ever normalise
+ * differently, every learner's answers start being marked wrong for reasons
+ * nobody can see — so this lives in the contracts package, imported by both,
+ * rather than being reimplemented on either side.
+ *
+ * Deliberately conservative: it removes only what is genuinely not part of the
+ * answer. It does NOT stem, spell-correct, or expand contractions — "I've" and
+ * "I have" are different answers, and silently equating them would hide a real
+ * learning signal.
+ */
+export function normaliseText(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFKC')
+    // Curly quotes and dashes vary by keyboard and by ASR; fold them first so
+    // the punctuation strip below treats them identically.
+    .replace(/[‘’‛]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    // Keep the apostrophe: it is part of the word, not punctuation around it.
+    .replace(/[^\p{L}\p{N}\s']/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Does this block carry a usable representation for the given channel? */
 export function hasRepresentation(block: ContentBlock, channel: OutputChannel): boolean {
   const r = block.representations ?? {};

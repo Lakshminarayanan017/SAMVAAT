@@ -17,8 +17,13 @@ export function PictographRenderer({ block }: RendererProps) {
 
   const spokenLabel = pictographs.map((p) => p.label).join(', ');
 
+  // A container div with role="img", not a <ul role="img">. Applying role="img"
+  // to a list strips its list semantics, which orphans the <li> children and is
+  // a genuine ARIA error (axe: "listitem"). role="img" also hides the subtree
+  // from assistive tech, so the composed aria-label below is what gets read —
+  // the strip is announced as one unit rather than as disconnected words.
   return (
-    <ul
+    <div
       data-channel="pictograph"
       role="img"
       aria-label={`Symbols: ${spokenLabel}`}
@@ -26,13 +31,12 @@ export function PictographRenderer({ block }: RendererProps) {
         display: 'flex',
         flexWrap: 'wrap',
         gap: 'var(--space-sm, 0.5rem)',
-        listStyle: 'none',
         margin: 0,
         padding: 0,
       }}
     >
       {pictographs.map((pictograph, index) => (
-        <li
+        <div
           key={`${pictograph.set}-${pictograph.id}-${index}`}
           style={{
             display: 'flex',
@@ -70,8 +74,8 @@ export function PictographRenderer({ block }: RendererProps) {
           <span style={{ fontSize: '0.95rem', color: 'var(--colour-fg)' }}>
             {pictograph.label}
           </span>
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }

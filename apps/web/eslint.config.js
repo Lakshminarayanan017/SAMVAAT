@@ -56,10 +56,22 @@ export default tseslint.config(
                 'See docs/ADR/0001-modality-neutral-content.md.',
             },
             {
-              group: ['**/modality/registry', '@/modality/registry'],
+              group: ['**/modality/input/adapters/*', '@/modality/input/adapters/*'],
               message:
-                'The renderer registry is internal to the modality layer. Import { ModalityRouter } ' +
-                "from '@/modality' instead.",
+                'Do not import an input adapter directly. Render <ModalityInput block={…} /> and ' +
+                "let the learner's profile choose how they answer. " +
+                'See docs/ADR/0002-canonical-text-response.md.',
+            },
+            {
+              group: [
+                '**/modality/registry',
+                '@/modality/registry',
+                '**/modality/input/registry',
+                '@/modality/input/registry',
+              ],
+              message:
+                'The registries are internal to the modality layer. Import { ModalityRouter, ' +
+                "ModalityInput } from '@/modality' instead.",
             },
           ],
         },
