@@ -17,7 +17,7 @@ rehearsing disclosure is rehearsing something that can cost them a job.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 #: Interlocutor manner. The learner chooses; `supportive` is the default because
 #: a learner meeting this feature for the first time should meet the kind
@@ -119,8 +119,13 @@ register(
         goal="asking for something to be repeated or explained again",
         scenario_tags=("clarify",),
         allowed_terms=frozenset({"machine", "instruction", "label"}),
-        opening="Right — put the labels on the left side of each box, then stack them by the door.",
-        opening_easy_read="Put the labels on the left of the box.\nThen stack the boxes by the door.",
+        opening=(
+            "Right — put the labels on the left side of each box, "
+            "then stack them by the door."
+        ),
+        opening_easy_read=(
+            "Put the labels on the left of the box.\nThen stack the boxes by the door."
+        ),
         scripted_turns=(
             {
                 "utterance": "Of course. Labels on the left side, then stack by the door.",

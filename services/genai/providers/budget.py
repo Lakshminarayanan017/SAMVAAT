@@ -101,7 +101,12 @@ class TokenBudget:
 
     GLOBAL_KEY = "__global__"
 
-    def check(self, user_key: str, estimated_tokens: int, today: date | None = None) -> BudgetDecision:
+    def check(
+        self,
+        user_key: str,
+        estimated_tokens: int,
+        today: date | None = None,
+    ) -> BudgetDecision:
         """Would this call fit inside both budgets?
 
         Checked before the call using an estimate, and recorded after using the

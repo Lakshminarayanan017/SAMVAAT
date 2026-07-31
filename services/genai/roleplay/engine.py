@@ -156,7 +156,12 @@ class RolePlayEngine:
 
     # ── public ───────────────────────────────────────────────────────────────
 
-    def open(self, scenario_id: str, difficulty: int = 2, persona: str = "supportive") -> TurnResult:
+    def open(
+        self,
+        scenario_id: str,
+        difficulty: int = 2,
+        persona: str = "supportive",
+    ) -> TurnResult:
         """The first turn.
 
         Authored, never generated. The opening line sets the whole frame, it is
@@ -197,7 +202,12 @@ class RolePlayEngine:
             prompt_id="authored/opening",
         )
 
-    def respond(self, state: ConversationState, learner_text: str, met_expectation: bool) -> TurnResult:
+    def respond(
+        self,
+        state: ConversationState,
+        learner_text: str,
+        met_expectation: bool,
+    ) -> TurnResult:
         """The next NPC turn, after the learner has said something."""
         scenario = self._scenario(state.scenario_id)
 

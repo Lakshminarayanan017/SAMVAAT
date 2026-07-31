@@ -140,6 +140,49 @@ class StoryResponse(BaseModel):
     notice: str | None = None
 
 
+class InterviewStatePayload(BaseModel):
+    """The interview, round-tripped through the client.
+
+    Note what has no field here: any timestamp of when a question was asked or
+    answered, any duration, any per-question clock. Ethics E6 is enforced by the
+    shape of this model — nothing downstream can score response latency because
+    nothing records it.
+    """
+
+    interview_id: str
+    track: Literal["hr", "role", "telephonic"] = "hr"
+    persona: Literal["supportive", "neutral", "brisk"] = "supportive"
+    exchanges: list[dict] = Field(default_factory=list)
+    target_questions: int = Field(default=10, ge=8, le=12)
+    status: Literal["in_progress", "paused", "complete"] = "in_progress"
+    started_at: str = ""
+    job_context: str = ""
+
+
+class InterviewStartRequest(BaseModel):
+    interview_id: str
+    track: Literal["hr", "role", "telephonic"] = "hr"
+    persona: Literal["supportive", "neutral", "brisk"] = "supportive"
+    target_questions: int = Field(default=10, ge=8, le=12)
+    job_context: str = Field(default="", max_length=200)
+
+
+class InterviewNextRequest(BaseModel):
+    state: InterviewStatePayload
+    #: The answer to the question currently on screen, if there is one.
+    answer: str | None = Field(default=None, max_length=8000)
+
+
+class InterviewQuestionResponse(BaseModel):
+    block: dict
+    state: InterviewStatePayload
+    generated: bool
+    provider: str
+    finished: bool = False
+    #: Progress, never pressure. "Question 4 of about 10", never a countdown.
+    progress: str = ""
+
+
 class ScoreRequest(BaseModel):
     question: str = Field(max_length=1000)
     answer: str = Field(max_length=8000)
@@ -287,6 +330,103 @@ def create_app() -> FastAPI:
         )
 
     @app.post(
+        "/interview/start",
+        response_model=InterviewQuestionResponse,
+        summary="Begin a mock interview",
+        dependencies=[Depends(require_service_token)],
+    )
+    async def start_interview(
+        request: Annotated[InterviewStartRequest, Body()],
+    ) -> InterviewQuestionResponse:
+        runner = _interview_runner()
+
+        state = runner.start(
+            interview_id=request.interview_id,
+            track=request.track,
+            persona=request.persona,
+            target_questions=request.target_questions,
+            job_context=request.job_context,
+        )
+
+        return _interview_response(runner.next_question(state))
+
+    @app.post(
+        "/interview/next",
+        response_model=InterviewQuestionResponse,
+        summary="Record an answer and get the next question",
+        dependencies=[Depends(require_service_token)],
+    )
+    async def next_interview_question(
+        request: Annotated[InterviewNextRequest, Body()],
+    ) -> InterviewQuestionResponse:
+        from interview.runner import Exchange, InterviewState
+
+        runner = _interview_runner()
+
+        state = InterviewState(
+            interview_id=request.state.interview_id,
+            track=request.state.track,
+            persona=request.state.persona,
+            exchanges=[Exchange(**exchange) for exchange in request.state.exchanges],
+            target_questions=request.state.target_questions,
+            status=request.state.status,
+            started_at=request.state.started_at,
+            job_context=request.state.job_context,
+        )
+
+        if request.answer is not None:
+            state = runner.record_answer(state, request.answer)
+
+        return _interview_response(runner.next_question(state))
+
+    @app.post(
+        "/interview/pause",
+        response_model=InterviewStatePayload,
+        summary="Pause an interview",
+        dependencies=[Depends(require_service_token)],
+    )
+    async def pause_interview(
+        state: Annotated[InterviewStatePayload, Body()],
+    ) -> InterviewStatePayload:
+        """Stop wherever the learner is.
+
+        No penalty, no expiry, no warning. A learner with anxiety or fatigue may
+        need to stop mid-answer and come back tomorrow, and an interview that
+        cannot be paused is one P4 and P5 will not finish.
+        """
+        return state.model_copy(update={"status": "paused"})
+
+    @app.get(
+        "/interview/disclosure",
+        summary="The accommodation and disclosure coach",
+    )
+    async def disclosure_coach(step: str = "considerations") -> dict:
+        """The feature no competitor has.
+
+        Never advises whether to disclose — that is the learner's decision about
+        their own life, and it depends on facts we do not have. It lays out
+        paired considerations, offers phrasings with what each one gives away
+        stated plainly, and rehearses both the good employer response and the
+        bad one.
+        """
+        from interview import disclosure
+
+        if step == "phrasing":
+            payload: dict = {"phrasings": disclosure.phrasings()}
+        elif step == "rights":
+            payload = disclosure.rights_primer()
+        elif step in {"supportive", "neutral", "poor"}:
+            payload = disclosure.branch(step)  # type: ignore[arg-type]
+        else:
+            payload = {"considerations": disclosure.considerations()}
+
+        # Every screen carries a way out and a route to a person. This content is
+        # emotionally loaded and a learner may find mid-way that they do not want
+        # to do it today.
+        payload.setdefault("exit_offer", disclosure.EXIT_OFFER)
+        return payload
+
+    @app.post(
         "/rubric/score",
         response_model=ScoreResponse,
         summary="Score one interview answer",
@@ -336,6 +476,7 @@ def create_app() -> FastAPI:
 
 _ROUTER = None
 _ENGINE = None
+_INTERVIEW = None
 
 
 def _router():
@@ -354,6 +495,37 @@ def _engine():
 
         _ENGINE = RolePlayEngine(_router())
     return _ENGINE
+
+
+def _interview_runner():
+    global _INTERVIEW
+    if _INTERVIEW is None:
+        from interview.runner import InterviewRunner
+
+        _INTERVIEW = InterviewRunner(_router())
+    return _INTERVIEW
+
+
+def _interview_response(result) -> InterviewQuestionResponse:
+    from dataclasses import asdict
+
+    return InterviewQuestionResponse(
+        block=result.block,
+        state=InterviewStatePayload(
+            interview_id=result.state.interview_id,
+            track=result.state.track,
+            persona=result.state.persona,
+            exchanges=[asdict(exchange) for exchange in result.state.exchanges],
+            target_questions=result.state.target_questions,
+            status=result.state.status,
+            started_at=result.state.started_at,
+            job_context=result.state.job_context,
+        ),
+        generated=result.generated,
+        provider=result.provider,
+        finished=result.finished,
+        progress=result.state.progress_message(),
+    )
 
 
 def _turn_response(result) -> TurnResponse:

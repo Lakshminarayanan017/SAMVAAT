@@ -111,10 +111,7 @@ def _roleplay_turn(request: GenerationRequest) -> dict:
     scenario = request.metadata.get("scenario", {})
     branches = scenario.get("scripted_turns") or []
 
-    if branches:
-        turn = choose(branches, request)
-    else:
-        turn = choose(_GENERIC_TURNS, request)
+    turn = choose(branches or _GENERIC_TURNS, request)
 
     target_phrases = list(scenario.get("target_phrases", []))[:3]
 
@@ -146,7 +143,11 @@ _GENERIC_TURNS: list[dict] = [
         "expects": ["request_help", "decline_politely"],
         "hint": "You could ask for something you need, or say you are fine.",
         "starter": "Could you",
-        "choices": ["Could you show me once more?", "No thank you, I am fine.", "I need more time."],
+        "choices": [
+            "Could you show me once more?",
+            "No thank you, I am fine.",
+            "I need more time.",
+        ],
         "easy_read": "Thank you for telling me.\nDo you need anything?",
     },
     {
@@ -155,7 +156,11 @@ _GENERIC_TURNS: list[dict] = [
         "expects": ["report_progress"],
         "hint": "Tell them how far you have got.",
         "starter": "I have finished",
-        "choices": ["I have finished the first batch.", "I am about halfway.", "I am running late."],
+        "choices": [
+            "I have finished the first batch.",
+            "I am about halfway.",
+            "I am running late.",
+        ],
         "easy_read": "Good.\nHow is your work going?",
     },
     {
@@ -244,6 +249,13 @@ def _interview_question(request: GenerationRequest) -> dict:
     }
 
 
+#: Twelve per track, matching MAX_QUESTIONS in the runner.
+#:
+#: Sized so a scripted interview reaches the full length rather than running out
+#: at five and closing early. The no-key configuration is the one CI runs in and
+#: the one an outage falls into, and "your mock interview ended after five
+#: questions" is a materially worse experience for someone who worked up the
+#: nerve to start one. A test asserts every track can fill a full interview.
 _INTERVIEW_QUESTIONS: dict[str, list[dict]] = {
     "hr": [
         {
@@ -272,9 +284,53 @@ _INTERVIEW_QUESTIONS: dict[str, list[dict]] = {
         },
         {
             "id": "hr.support",
-            "text": "Is there anything that would help you do your best work here?",
+            "text": (
+                "Is there anything that would help you do your best work here?"
+            ),
             "easy_read": "What would help you at work?",
             "starter": "It helps me if",
+        },
+        {
+            "id": "hr.teamwork",
+            "text": "Tell me about working with other people. What is that like for you?",
+            "easy_read": "Tell me about working with other people.",
+            "starter": "I like working",
+        },
+        {
+            "id": "hr.feedback",
+            "text": "How do you feel when someone tells you to change how you do something?",
+            "easy_read": "Someone says to do a job differently.\nHow do you feel?",
+            "starter": "I listen and",
+        },
+        {
+            "id": "hr.mistake",
+            "text": "Tell me about a time you made a mistake at work. What happened next?",
+            "easy_read": "Tell me about a mistake at work.\nWhat did you do after?",
+            "starter": "Once I",
+        },
+        {
+            "id": "hr.busy_day",
+            "text": "What do you do when there is a lot of work and not much time?",
+            "easy_read": "There is a lot of work.\nWhat do you do?",
+            "starter": "I would",
+        },
+        {
+            "id": "hr.proud",
+            "text": "What is a piece of work you are proud of?",
+            "easy_read": "Tell me about work you did well.",
+            "starter": "I am proud of",
+        },
+        {
+            "id": "hr.learning",
+            "text": "How do you learn something new at work?",
+            "easy_read": "How do you learn a new job?",
+            "starter": "I learn best when",
+        },
+        {
+            "id": "hr.questions_for_us",
+            "text": "Is there anything you would like to ask me about the job?",
+            "easy_read": "Do you want to ask me something?",
+            "starter": "I would like to know",
         },
     ],
     "role": [
@@ -296,6 +352,60 @@ _INTERVIEW_QUESTIONS: dict[str, list[dict]] = {
             "easy_read": "How do you like to learn a new job?",
             "starter": "It helps me if",
         },
+        {
+            "id": "role.accuracy",
+            "text": "This job needs careful, accurate work. How do you check your own work?",
+            "easy_read": "How do you check your work is right?",
+            "starter": "I check by",
+        },
+        {
+            "id": "role.equipment",
+            "text": "Have you used machines or equipment at work before? Tell me about it.",
+            "easy_read": "Have you used machines at work?\nTell me about it.",
+            "starter": "I have used",
+        },
+        {
+            "id": "role.routine",
+            "text": "This role is the same tasks most days. How do you feel about that?",
+            "easy_read": "The work is the same every day.\nIs that good for you?",
+            "starter": "I like",
+        },
+        {
+            "id": "role.problem",
+            "text": "Something in your work is not going right. What do you do first?",
+            "easy_read": "Something goes wrong.\nWhat do you do first?",
+            "starter": "First I would",
+        },
+        {
+            "id": "role.shift",
+            "text": "The shift starts early. How would you get here on time?",
+            "easy_read": "Work starts early.\nHow will you get here?",
+            "starter": "I would come by",
+        },
+        {
+            "id": "role.help",
+            "text": "When would you ask someone for help, and when would you carry on?",
+            "easy_read": "When do you ask for help?",
+            "starter": "I would ask if",
+        },
+        {
+            "id": "role.quality",
+            "text": "What does doing this job well look like to you?",
+            "easy_read": "What is good work in this job?",
+            "starter": "Good work means",
+        },
+        {
+            "id": "role.training",
+            "text": "There is a week of training first. What would help you most in that week?",
+            "easy_read": "There is training first.\nWhat would help you?",
+            "starter": "It would help if",
+        },
+        {
+            "id": "role.handover",
+            "text": "At the end of a shift, how would you tell the next person what you did?",
+            "easy_read": "Your shift ends.\nHow do you tell the next person?",
+            "starter": "I would tell them",
+        },
     ],
     "telephonic": [
         {
@@ -315,6 +425,60 @@ _INTERVIEW_QUESTIONS: dict[str, list[dict]] = {
             "text": "Sorry, the line is not very clear. Could you say that once more?",
             "easy_read": "I cannot hear you well.\nPlease say it again.",
             "starter": "",
+        },
+        {
+            "id": "tel.role_understanding",
+            "text": "What do you understand the job to involve?",
+            "easy_read": "What do you think this job is?",
+            "starter": "I think the job is",
+        },
+        {
+            "id": "tel.experience",
+            "text": "Could you tell me about the work you have done before?",
+            "easy_read": "What work have you done before?",
+            "starter": "I worked at",
+        },
+        {
+            "id": "tel.spell",
+            "text": "Could you spell your full name for me, please?",
+            "easy_read": "Please spell your name.",
+            "starter": "",
+        },
+        {
+            "id": "tel.hours",
+            "text": "The hours are eight to four, Monday to Saturday. Does that work for you?",
+            "easy_read": "Work is 8 to 4.\nMonday to Saturday.\nIs that okay?",
+            "starter": "Yes, that",
+        },
+        {
+            "id": "tel.location",
+            "text": "How far are you from the site, and how would you travel?",
+            "easy_read": "Where do you live?\nHow will you travel to work?",
+            "starter": "I live",
+        },
+        {
+            "id": "tel.clarify",
+            "text": "I did not catch that last part. Could you explain it again?",
+            "easy_read": "I did not hear the last part.\nPlease say it again.",
+            "starter": "",
+        },
+        {
+            "id": "tel.support",
+            "text": "Is there anything we should know that would help you at work?",
+            "easy_read": "Is there something that would help you at work?",
+            "starter": "It helps me if",
+        },
+        {
+            "id": "tel.next_steps",
+            "text": "Do you have any questions about what happens next?",
+            "easy_read": "Do you want to ask about the next step?",
+            "starter": "What happens",
+        },
+        {
+            "id": "tel.close",
+            "text": "Thank you for your time. Is the best number to reach you this one?",
+            "easy_read": "Thank you.\nIs this the best number for you?",
+            "starter": "Yes, that",
         },
     ],
 }

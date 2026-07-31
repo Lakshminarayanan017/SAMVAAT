@@ -30,7 +30,7 @@ from __future__ import annotations
 import logging
 import math
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import lru_cache
 
 log = logging.getLogger("samvaad.genai.retrieval")
@@ -54,7 +54,10 @@ class Retrieved:
     def as_context_line(self) -> str:
         """One line of prompt context. Compact on purpose — this is multiplied
         by top-k and by every turn of every conversation."""
-        return f'- {self.block_id} ({self.intent}, level {self.difficulty}): "{self.canonical_text}"'
+        return (
+            f"- {self.block_id} ({self.intent}, level {self.difficulty}): "
+            f'"{self.canonical_text}"'
+        )
 
 
 @dataclass
@@ -84,6 +87,10 @@ class PhraseIndex:
     def __init__(self, blocks: list[dict]) -> None:
         self.blocks = blocks
         self._by_id = {block["id"]: block for block in blocks}
+        # Row of each block in the embedding matrix. Computed once here rather
+        # than via an lru_cache on a method, which would pin every index that
+        # was ever built in memory for the life of the process.
+        self._positions = {block["id"]: index for index, block in enumerate(blocks)}
         self._embeddings = None
         self._tokens: dict[str, set[str]] = {
             block["id"]: _tokenise(
@@ -153,9 +160,8 @@ class PhraseIndex:
             return False
         if not query.min_difficulty <= block["difficulty"] <= query.max_difficulty:
             return False
-        if query.scenario_tags and not set(query.scenario_tags) & set(block.get("scenario_tags", [])):
-            return False
-        return True
+        tags = set(block.get("scenario_tags", []))
+        return not (query.scenario_tags and not set(query.scenario_tags) & tags)
 
     def _score(self, block: dict, query: Query) -> float:
         score = 0.0
@@ -180,7 +186,10 @@ class PhraseIndex:
 
         if embeddings is None:
             return _keyword_similarity(
-                _tokenise(text), self._tokens[block["id"]], self._document_frequency, len(self.blocks)
+                _tokenise(text),
+                self._tokens[block["id"]],
+                self._document_frequency,
+                len(self.blocks),
             )
 
         import numpy as np
@@ -189,12 +198,8 @@ class PhraseIndex:
         block_vector = embeddings[self._index_of(block["id"])]
         return float(np.dot(query_vector, block_vector))
 
-    @lru_cache(maxsize=1)
-    def _index_map(self) -> dict[str, int]:
-        return {block["id"]: index for index, block in enumerate(self.blocks)}
-
     def _index_of(self, block_id: str) -> int:
-        return self._index_map()[block_id]
+        return self._positions[block_id]
 
     def _get_embeddings(self):
         """Encode the corpus once, lazily.

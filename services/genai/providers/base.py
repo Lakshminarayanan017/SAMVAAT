@@ -156,6 +156,3 @@ class LLMProvider(ABC):
     def available(self) -> bool:
         """Whether this provider can be used right now."""
         return True
-
-    def close(self) -> None:  # pragma: no cover - most providers hold nothing
-        """Release any held resources."""

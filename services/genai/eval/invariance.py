@@ -194,7 +194,10 @@ def run_structural_gate(seed: int = 20260731) -> list[GateResult]:
     return results
 
 
-def run_end_to_end_gate(scorer, question: str = "Tell me about a time you solved a problem at work.") -> list[GateResult]:
+def run_end_to_end_gate(
+    scorer,
+    question: str = "Tell me about a time you solved a problem at work.",
+) -> list[GateResult]:
     """Level 2. Needs a provider.
 
     Catches the case the structural gate cannot: a scorer that somehow receives
@@ -222,7 +225,10 @@ def run_end_to_end_gate(scorer, question: str = "Tell me about a time you solved
             GateResult(
                 name=case.name,
                 passed=difference <= EPSILON,
-                detail=f"total {clean.total} vs {degraded.total} (difference {difference}, bar {EPSILON})",
+                detail=(
+                    f"total {clean.total} vs {degraded.total} "
+                    f"(difference {difference}, bar {EPSILON})"
+                ),
             )
         )
 

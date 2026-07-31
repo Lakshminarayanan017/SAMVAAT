@@ -168,7 +168,9 @@ def validate(title: str, panels: list[Panel]) -> ValidationResult:
     # sentence type in a social story, and a naive second-person check rejects
     # every one of them. The rule is about who the *narration* addresses.
     second_person = [
-        panel for panel in panels if re.search(r"\byou\b", _outside_quotes(panel.text), re.IGNORECASE)
+        panel
+        for panel in panels
+        if re.search(r"\byou\b", _outside_quotes(panel.text), re.IGNORECASE)
     ]
     if second_person:
         problems.append(

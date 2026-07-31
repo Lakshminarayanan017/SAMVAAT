@@ -61,6 +61,9 @@ def _build_system_prompt() -> str:
         for spec in SPECS.values()
     )
     anchors = "\n".join(f"  {value} = {label}" for value, label in SCORE_ANCHORS.items())
+    score_fields = ", ".join(
+        f'"{name}": <{MIN_SCORE}-{MAX_SCORE}>' for name in scored_dimension_names()
+    )
 
     return f"""You score one answer from a mock job interview.
 
@@ -85,7 +88,7 @@ evidence, score it {MIN_SCORE} and say so.
 
 Respond with JSON only:
 {{
-  "scores": {{ {", ".join(f'"{name}": <{MIN_SCORE}-{MAX_SCORE}>' for name in scored_dimension_names())} }},
+  "scores": {{ {score_fields} }},
   "evidence": {{ "<dimension>": "<a short quote from the answer>" }},
   "strengths": ["one or two things the answer did well"],
   "improvements": ["at most two things to try next time"]
@@ -225,7 +228,13 @@ class RubricScorer:
 
         return self._combine(collected, scrubbed, provider, prompt_id)
 
-    def _combine(self, payloads: list[dict], scrubbed, provider: str, prompt_id: str) -> RubricResult:
+    def _combine(
+        self,
+        payloads: list[dict],
+        scrubbed,
+        provider: str,
+        prompt_id: str,
+    ) -> RubricResult:
         """Median across runs, per dimension.
 
         Median rather than mean: one outlier run must move a learner's score by
@@ -320,7 +329,11 @@ def apply_overrides(result: RubricResult, overrides: list[TrainerOverride]) -> R
         dimensions=tuple(
             DimensionScore(
                 dimension=d.dimension,
-                score=by_dimension[d.dimension].new_score if d.dimension in by_dimension else d.score,
+                score=(
+                    by_dimension[d.dimension].new_score
+                    if d.dimension in by_dimension
+                    else d.score
+                ),
                 evidence=d.evidence,
                 runs=d.runs,
             )
