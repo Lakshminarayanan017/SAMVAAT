@@ -14,34 +14,23 @@ from datetime import datetime, timezone
 from typing import Annotated, Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.security.consent import (
-    PURPOSES,
-    ConsentError,
-    InMemoryConsentLedger,
-    require_consent,
-)
-from app.security.retention import (
-    AudioObject,
-    InMemoryAudioStore,
-    RetentionReason,
-    expiry_for,
-    purge_expired,
-    purge_for_user,
-)
+from app.db.session import get_session
+from app.repositories.learners import AudioRepository, ConsentRepository
+from app.security.auth import CurrentUser
+from app.security.consent import PURPOSES, ConsentError
+from app.security.retention import AudioObject, RetentionReason, expiry_for
 
 router = APIRouter(prefix="/audio", tags=["audio"])
 
-# TEMPORARY: replaced by Supabase storage and the Postgres ledger in M17.
-_store = InMemoryAudioStore()
-_ledger = InMemoryConsentLedger()
+Session = Annotated[AsyncSession, Depends(get_session)]
 
 
 class UploadRequest(BaseModel):
-    user_id: str
     session_id: str
     block_id: str
     reason: Literal["processing", "learner_review", "research_corpus"] = "processing"
@@ -59,7 +48,6 @@ class UploadTicket(BaseModel):
 
 
 class ConsentRequest(BaseModel):
-    user_id: str
     purpose: str
     granted: bool
     guardian_user_id: str | None = None
@@ -77,15 +65,23 @@ class PurgeSummary(BaseModel):
 
 
 @router.post("/upload-url", response_model=UploadTicket, summary="Get an upload ticket")
-async def request_upload(request: Annotated[UploadRequest, Body()]) -> UploadTicket:
+async def request_upload(
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[UploadRequest, Body()],
+) -> UploadTicket:
     reason = RetentionReason(request.reason)
+    consents = ConsentRepository(session)
 
     try:
         # The processing consent is always required; a reason beyond processing
         # requires its own, separate grant.
-        require_consent(_ledger, request.user_id, "speech_processing")
+        if not await consents.has_consent(principal.user_id, "speech_processing"):
+            raise ConsentError(principal.user_id, "speech_processing")
         if reason is not RetentionReason.PROCESSING:
-            require_consent(_ledger, request.user_id, _consent_for(reason))
+            purpose = _consent_for(reason)
+            if not await consents.has_consent(principal.user_id, purpose):
+                raise ConsentError(principal.user_id, purpose)
     except ConsentError as error:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
@@ -100,10 +96,10 @@ async def request_upload(request: Annotated[UploadRequest, Body()]) -> UploadTic
     key = f"audio/{now:%Y/%m/%d}/{request.session_id}/{uuid4().hex}.wav"
     expires_at = expiry_for(reason, now)
 
-    _store.put(
+    await AudioRepository(session).put(
         AudioObject(
             key=key,
-            user_id=request.user_id,
+            user_id=principal.user_id,
             reason=reason,
             created_at=now,
             expires_at=expires_at,
@@ -122,49 +118,87 @@ async def request_upload(request: Annotated[UploadRequest, Body()]) -> UploadTic
 
 
 @router.post("/consent", response_model=ConsentStatus, summary="Grant or revoke consent")
-async def set_consent(request: Annotated[ConsentRequest, Body()]) -> ConsentStatus:
+async def set_consent(
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[ConsentRequest, Body()],
+) -> ConsentStatus:
     if request.purpose not in PURPOSES:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown purpose '{request.purpose}'")
 
-    if request.granted:
-        _ledger.grant(request.user_id, request.purpose, request.guardian_user_id)
-    else:
-        _ledger.revoke(request.user_id, request.purpose)
+    consents = ConsentRepository(session)
+    await consents.record(
+        principal.user_id, request.purpose, request.granted, request.guardian_user_id
+    )
 
+    if not request.granted:
         # Revocation deletes, immediately. Consent that can be withdrawn without
         # the data going with it is not consent, it is a preference.
+        audio = AudioRepository(session)
         if request.purpose in _REASON_FOR_CONSENT:
-            purge_for_user(_store, request.user_id, _REASON_FOR_CONSENT[request.purpose])
+            await audio.purge_for_user(principal.user_id, _REASON_FOR_CONSENT[request.purpose])
         elif request.purpose == "speech_processing":
-            purge_for_user(_store, request.user_id)
+            await audio.purge_for_user(principal.user_id)
 
-    return await consent_status(request.user_id)
+    return await consent_status(principal, session)
 
 
-@router.get("/consent/{user_id}", response_model=ConsentStatus, summary="Current consents")
-async def consent_status(user_id: str) -> ConsentStatus:
+@router.get("/consent", response_model=ConsentStatus, summary="Current consents")
+async def consent_status(principal: CurrentUser, session: Session) -> ConsentStatus:
+    """No user id in the path. A learner may only read their own consents."""
+    granted = await ConsentRepository(session).granted(principal.user_id)
     return ConsentStatus(
-        user_id=user_id,
-        granted=sorted(p for p in PURPOSES if _ledger.has_consent(user_id, p)),
+        user_id=principal.user_id,
+        granted=sorted(granted),
         available=sorted(PURPOSES),
     )
 
 
+class StoredRecording(BaseModel):
+    key: str
+    reason: str
+    created_at: datetime
+    expires_at: datetime | None
+
+
+@router.get("/mine", response_model=list[StoredRecording], summary="What recordings we hold")
+async def my_recordings(principal: CurrentUser, session: Session) -> list[StoredRecording]:
+    """Every recording of this learner's voice that still exists, and when each
+    one disappears.
+
+    A learner is entitled to know what we hold without asking anyone. A promise
+    in a policy document that cannot be checked is not transparency, and voice
+    is the most sensitive thing this product stores.
+    """
+    objects = await AudioRepository(session).list_for_user(principal.user_id)
+    return [
+        StoredRecording(
+            key=obj.key,
+            reason=obj.reason.value,
+            created_at=obj.created_at,
+            expires_at=obj.expires_at,
+        )
+        for obj in objects
+    ]
+
+
 @router.post("/purge", response_model=PurgeSummary, summary="Run the retention purge")
-async def run_purge() -> PurgeSummary:
+async def run_purge(session: Session) -> PurgeSummary:
     """Delete everything past its TTL.
 
     Exposed so the scheduled job and the tests exercise the same code path. In
     production this is called by a cron worker, not by a client.
     """
-    result = purge_expired(_store)
-    return PurgeSummary(deleted=result.count, remaining=result.remaining)
+    deleted = await AudioRepository(session).purge_expired()
+    return PurgeSummary(deleted=len(deleted), remaining=0)
 
 
-@router.delete("/user/{user_id}", response_model=PurgeSummary, summary="Erase a learner's audio")
-async def erase_user(user_id: str) -> PurgeSummary:
-    result = purge_for_user(_store, user_id)
-    return PurgeSummary(deleted=result.count, remaining=result.remaining)
+@router.delete("/me", response_model=PurgeSummary, summary="Erase my audio")
+async def erase_mine(principal: CurrentUser, session: Session) -> PurgeSummary:
+    audio = AudioRepository(session)
+    deleted = await audio.purge_for_user(principal.user_id)
+    remaining = len(await audio.list_for_user(principal.user_id))
+    return PurgeSummary(deleted=len(deleted), remaining=remaining)
 
 
 _REASON_FOR_CONSENT = {

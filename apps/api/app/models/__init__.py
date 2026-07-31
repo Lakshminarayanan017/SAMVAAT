@@ -1,1 +1,1 @@
-﻿"""SQLAlchemy models (M1 onwards)."""
+"""SQLAlchemy models. Import `tables` for the schema."""

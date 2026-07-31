@@ -19,3 +19,11 @@ argon2-cffi>=23.1,<24.0
 sqlalchemy>=2.0,<2.1
 asyncpg>=0.30,<0.31
 alembic>=1.14,<1.15
+
+# auth and persistence (M1)
+pyjwt>=2.9,<3.0
+email-validator>=2.2,<3.0
+
+# SQLite in development and tests, Postgres in production - same async API.
+# A test suite that needs a container running is a test suite people skip.
+aiosqlite>=0.20,<1.0

@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (M1 auth + persistence) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -13,7 +13,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | # | Module | State | Note |
 |---|---|---|---|
 | M0 | Foundations, contracts, CI, ethics charter | ✅ done | |
-| M1 | Identity, consent & CAP | 🟡 partial | CAP contract + provider + consent ledger exist. **No auth, no onboarding funnel, no database.** |
+| M1 | Identity, consent & CAP | 🟡 partial | Auth, guest sessions, database and repositories done. **No onboarding funnel yet.** |
 | M2 | Modality Router & design system | ✅ done | |
 | M3 | Workplace Language Bank | ✅ done | 226 phrases. Assets outstanding — see below. |
 | M4 | Practice loop (FSRS) | ✅ done | Reachable end-to-end. |
@@ -29,7 +29,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M14 | The three dashboards | ⬜ not started | Blocks Ethics E5 enforcement. |
 | M15 | Offline-first & on-device inference | ⬜ not started | |
 | M16 | ISL & AAC depth | 🟡 partial | AAC input + ISL output done. **ISL recognition not started** — blocks E4. |
-| M17 | Privacy hardening | 🟡 partial | Consent + retention + redaction + service auth done. **No database, no RLS, no export/erasure UI.** |
+| M17 | Privacy hardening | 🟡 partial | Consent, retention, redaction, service auth, self-service erasure done. **No RLS, no data export.** |
 | M18 | Accessibility validation & pilot | 🟡 partial | axe + persona tests in CI. **No manual screen-reader passes. No pilot partner.** |
 | M19 | Observability & MLOps | 🟡 partial | Structured logging, tracing, redaction shipped. **No Sentry, no metrics, no dashboards.** |
 
@@ -43,11 +43,17 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 
 | Gap | Consequence | Where |
 |---|---|---|
-| **No database.** Every store is in-memory behind a Protocol | Restart the API and every learner loses their cards, conversations, consents and audit records | M1 |
-| **No authentication.** `user_id` is supplied by the caller | Anyone can read anyone's interview by guessing a user id | M1 |
-| **No onboarding.** The CAP is hard-coded to a demo persona | A real learner cannot tell us how they need to be spoken to | M1 |
+| **No onboarding.** The CAP is hard-coded to a demo persona | A real learner cannot tell us how they need to be spoken to, so the Modality Router serves a fixture rather than a person | M1 |
 
-Everything else is comfort. These three are why this is a demo and not a product.
+**Closed since the last update:**
+
+| Was | Now |
+|---|---|
+| ~~No database~~ | SQLAlchemy async, SQLite in dev and tests, Postgres in production. Every store is a real repository. |
+| ~~No authentication~~ | JWT sessions, guest-first. `user_id` has been **removed from every request model**, so identity can only come from the token. 34 tests, including an IDOR regression suite. |
+
+The onboarding funnel is now the only thing between this and a product a real
+learner could be handed.
 
 ### 🟠 Blocking a claim we make
 
@@ -76,6 +82,8 @@ Everything else is comfort. These three are why this is a demo and not a product
 | No client-side router | Two views do not justify one | M14, when dashboards arrive |
 | Free tiers sleep on idle (~30 s cold start) | Tolerable in development | Before the pilot; fix is a paid dyno, not a rewrite |
 | `packages/platform` needs pip ≥ 21.3 | Editable install needs PEP 660 | Document it; it produces a confusing error otherwise |
+| No password or magic-link sign-in | Guest + upgrade covers the demo, and passwords are a liability we do not need | M17, when Supabase Auth lands behind the same `authenticate` dependency |
+| No Alembic migrations yet | `create_all` is correct for SQLite dev and tests | First Postgres deployment — `create_all` cannot alter a table and fails silently |
 | Social stories have no UI | The endpoint works and is testable | Whenever a learner is meant to read one |
 
 ---
@@ -85,14 +93,14 @@ Everything else is comfort. These three are why this is a demo and not a product
 | Job | Covers |
 |---|---|
 | `contracts` | Schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 108 tests, lint, cross-language contract round-trip |
+| `api` | 144 tests, lint, cross-language contract round-trip, IDOR regression suite |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
 | `web` | 126 tests, lint, typecheck, build, axe sweep across every channel and input mode |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**638 tests.** Nothing merges without all seven green.
+**674 tests.** Nothing merges without all seven green.
 
 ---
 
@@ -101,4 +109,5 @@ Everything else is comfort. These three are why this is a demo and not a product
 1. **Update it in the same commit as the work.** A status page updated separately is a status page nobody trusts.
 2. **"Done" means a learner can reach it.** Not "the tests pass".
 3. **A gap with no owner and no trigger is a wish.** Every 🔴 and 🟠 row names the module that closes it.
-4. **Do not delete a gap because it is embarrassing.** The three 🔴 rows above are the most useful lines on this page.
+4. **Do not delete a gap because it is embarrassing.** The 🔴 rows are the most useful lines on this page.
+5. **When a gap closes, move it into "Closed since the last update" rather than deleting it.** Knowing what was fixed and when is how the next person judges whether the rest of this page is trustworthy.

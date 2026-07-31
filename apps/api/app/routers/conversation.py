@@ -23,19 +23,22 @@ THREE RULES THIS ROUTER ENFORCES
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.learning.conversations import Conversation, InMemoryConversationStore
+from app.db.session import get_session
+from app.learning.conversations import Conversation
+from app.repositories.learners import AuditRepository, ConversationRepository
+from app.security.auth import CurrentUser
 from app.services.genai_client import GenAiClient, GenAiUnavailable
 
 router = APIRouter(tags=["conversation"])
 
-# TEMPORARY: replaced by the Postgres store in M1. Not persistent.
-_store = InMemoryConversationStore()
+Session = Annotated[AsyncSession, Depends(get_session)]
 _client = GenAiClient()
 
 
@@ -46,12 +49,15 @@ def _unavailable(error: GenAiUnavailable) -> HTTPException:
     )
 
 
-def _load(conversation_id: str, user_id: str) -> Conversation:
-    conversation = _store.get(conversation_id)
+async def _load(session: AsyncSession, conversation_id: str, user_id: str) -> Conversation:
+    """Scoped on user_id in the query itself, so there is no path here that CAN
+    return someone else's conversation.
 
-    # Same response for "does not exist" and "belongs to someone else", so this
-    # cannot be used to discover which conversation ids are real.
-    if conversation is None or conversation.user_id != user_id:
+    A missing row and someone else's row are indistinguishable from outside,
+    so conversation ids cannot be probed for existence.
+    """
+    conversation = await ConversationRepository(session).get(conversation_id, user_id)
+    if conversation is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No such conversation")
     return conversation
 
@@ -60,14 +66,12 @@ def _load(conversation_id: str, user_id: str) -> Conversation:
 
 
 class OpenRoleplayRequest(BaseModel):
-    user_id: str
     scenario_id: str
     difficulty: int = Field(default=2, ge=1, le=5)
     persona: Literal["supportive", "neutral", "brisk"] = "supportive"
 
 
 class ReplyRequest(BaseModel):
-    user_id: str
     text: str = Field(max_length=4000)
     met_expectation: bool = True
     text_complexity: Literal["standard", "easy_read"] = "standard"
@@ -92,7 +96,11 @@ async def scenarios() -> list[dict]:
 
 
 @router.post("/roleplay/start", response_model=TurnResponse, summary="Open a role-play")
-async def start_roleplay(request: Annotated[OpenRoleplayRequest, Body()]) -> TurnResponse:
+async def start_roleplay(
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[OpenRoleplayRequest, Body()],
+) -> TurnResponse:
     try:
         result = await _client.open_roleplay(
             request.scenario_id, request.difficulty, request.persona
@@ -103,13 +111,13 @@ async def start_roleplay(request: Annotated[OpenRoleplayRequest, Body()]) -> Tur
     now = datetime.now(timezone.utc)
     conversation = Conversation(
         id=f"rp_{uuid4().hex[:12]}",
-        user_id=request.user_id,
+        user_id=principal.user_id,
         kind="roleplay",
         state=result["state"],
         created_at=now,
         updated_at=now,
     )
-    _store.save(conversation)
+    await ConversationRepository(session).save(conversation)
 
     return TurnResponse(
         conversation_id=conversation.id,
@@ -127,9 +135,12 @@ async def start_roleplay(request: Annotated[OpenRoleplayRequest, Body()]) -> Tur
     summary="Take a turn",
 )
 async def reply(
-    conversation_id: str, request: Annotated[ReplyRequest, Body()]
+    conversation_id: str,
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[ReplyRequest, Body()],
 ) -> TurnResponse:
-    conversation = _load(conversation_id, request.user_id)
+    conversation = await _load(session, conversation_id, principal.user_id)
 
     try:
         result = await _client.roleplay_respond(
@@ -146,7 +157,7 @@ async def reply(
 
     conversation.state = result["state"]
     conversation.exchanges.append({"learner": request.text, "npc": result["block"]})
-    _store.save(conversation)
+    await ConversationRepository(session).save(conversation)
 
     return TurnResponse(
         conversation_id=conversation.id,
@@ -163,7 +174,6 @@ async def reply(
 
 
 class StartInterviewRequest(BaseModel):
-    user_id: str
     track: Literal["hr", "role", "telephonic"] = "hr"
     persona: Literal["supportive", "neutral", "brisk"] = "supportive"
     target_questions: int = Field(default=10, ge=8, le=12)
@@ -171,7 +181,6 @@ class StartInterviewRequest(BaseModel):
 
 
 class AnswerRequest(BaseModel):
-    user_id: str
     #: Absent means "ask the first question". Present means "here is my answer,
     #: now ask the next one".
     answer: str | None = Field(default=None, max_length=8000)
@@ -188,7 +197,11 @@ class QuestionResponse(BaseModel):
 
 
 @router.post("/interview/start", response_model=QuestionResponse, summary="Begin an interview")
-async def start_interview(request: Annotated[StartInterviewRequest, Body()]) -> QuestionResponse:
+async def start_interview(
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[StartInterviewRequest, Body()],
+) -> QuestionResponse:
     interview_id = f"iv_{uuid4().hex[:12]}"
 
     try:
@@ -205,13 +218,13 @@ async def start_interview(request: Annotated[StartInterviewRequest, Body()]) -> 
     now = datetime.now(timezone.utc)
     conversation = Conversation(
         id=interview_id,
-        user_id=request.user_id,
+        user_id=principal.user_id,
         kind="interview",
         state=result["state"],
         created_at=now,
         updated_at=now,
     )
-    _store.save(conversation)
+    await ConversationRepository(session).save(conversation)
 
     return QuestionResponse(
         conversation_id=interview_id,
@@ -229,9 +242,12 @@ async def start_interview(request: Annotated[StartInterviewRequest, Body()]) -> 
     summary="Answer, and get the next question",
 )
 async def answer(
-    conversation_id: str, request: Annotated[AnswerRequest, Body()]
+    conversation_id: str,
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[AnswerRequest, Body()],
 ) -> QuestionResponse:
-    conversation = _load(conversation_id, request.user_id)
+    conversation = await _load(session, conversation_id, principal.user_id)
 
     if conversation.finished:
         raise HTTPException(status.HTTP_409_CONFLICT, "This interview is already finished")
@@ -245,7 +261,7 @@ async def answer(
     if request.answer is not None:
         conversation.exchanges.append({"answer": request.answer})
     conversation.finished = bool(result.get("finished"))
-    _store.save(conversation)
+    await ConversationRepository(session).save(conversation)
 
     return QuestionResponse(
         conversation_id=conversation.id,
@@ -257,14 +273,10 @@ async def answer(
     )
 
 
-class PauseRequest(BaseModel):
-    user_id: str
-
-
 @router.post("/interview/{conversation_id}/pause", summary="Pause, keeping your place")
-async def pause(conversation_id: str, request: Annotated[PauseRequest, Body()]) -> dict:
+async def pause(conversation_id: str, principal: CurrentUser, session: Session) -> dict:
     """Ethics E6. Stopping must never cost the learner their progress."""
-    conversation = _load(conversation_id, request.user_id)
+    conversation = await _load(session, conversation_id, principal.user_id)
 
     try:
         result = await _client.interview_pause(conversation.state)
@@ -275,7 +287,7 @@ async def pause(conversation_id: str, request: Annotated[PauseRequest, Body()]) 
         conversation.state = {**conversation.state, "status": "paused"}
         result = {}
 
-    _store.save(conversation)
+    await ConversationRepository(session).save(conversation)
 
     return {
         "conversation_id": conversation.id,
@@ -286,8 +298,10 @@ async def pause(conversation_id: str, request: Annotated[PauseRequest, Body()]) 
 
 
 @router.get("/interview/{conversation_id}", summary="Resume, or review")
-async def get_interview(conversation_id: str, user_id: str) -> dict:
-    conversation = _load(conversation_id, user_id)
+async def get_interview(
+    conversation_id: str, principal: CurrentUser, session: Session
+) -> dict:
+    conversation = await _load(session, conversation_id, principal.user_id)
     return {
         "conversation_id": conversation.id,
         "kind": conversation.kind,
@@ -299,7 +313,10 @@ async def get_interview(conversation_id: str, user_id: str) -> dict:
 
 
 @router.get("/interviews", summary="A learner's interviews")
-async def list_interviews(user_id: str) -> list[dict]:
+async def list_interviews(principal: CurrentUser, session: Session) -> list[dict]:
+    conversations = await ConversationRepository(session).list_for_user(
+        principal.user_id, kind="interview"
+    )
     return [
         {
             "conversation_id": c.id,
@@ -307,7 +324,7 @@ async def list_interviews(user_id: str) -> list[dict]:
             "questions_answered": len(c.exchanges),
             "updated_at": c.updated_at,
         }
-        for c in _store.list_for_user(user_id, kind="interview")
+        for c in conversations
     ]
 
 
@@ -315,7 +332,6 @@ async def list_interviews(user_id: str) -> list[dict]:
 
 
 class ScoreRequest(BaseModel):
-    user_id: str
     question: str = Field(max_length=1000)
     answer: str = Field(max_length=8000)
     role_context: str = Field(default="", max_length=500)
@@ -330,12 +346,12 @@ class ScoreResponse(BaseModel):
     audit_id: str | None = None
 
 
-#: Append-only. TEMPORARY until M17 moves it to the database.
-_audit: list[dict[str, Any]] = []
-
-
 @router.post("/interview/score", response_model=ScoreResponse, summary="Score one answer")
-async def score(request: Annotated[ScoreRequest, Body()]) -> ScoreResponse:
+async def score(
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[ScoreRequest, Body()],
+) -> ScoreResponse:
     try:
         result = await _client.score(request.question, request.answer, request.role_context)
     except GenAiUnavailable as error:
@@ -347,13 +363,8 @@ async def score(request: Annotated[ScoreRequest, Body()]) -> ScoreResponse:
         # was blind to speech traits; persisting the record is what makes that
         # provable later, to someone who was not in the room.
         audit_id = f"aud_{uuid4().hex[:12]}"
-        _audit.append(
-            {
-                "id": audit_id,
-                "user_id": request.user_id,
-                "at": datetime.now(timezone.utc).isoformat(),
-                **result["audit"],
-            }
+        await AuditRepository(session).record(
+            audit_id, principal.user_id, result["audit"], conversation_id=None
         )
 
     return ScoreResponse(
@@ -367,11 +378,22 @@ async def score(request: Annotated[ScoreRequest, Body()]) -> ScoreResponse:
 
 
 @router.get("/interview/audit/{audit_id}", summary="Retrieve a rubric audit record")
-async def audit_record(audit_id: str) -> dict:
-    for record in _audit:
-        if record["id"] == audit_id:
-            return record
-    raise HTTPException(status.HTTP_404_NOT_FOUND, "No such audit record")
+async def audit_record(audit_id: str, principal: CurrentUser, session: Session) -> dict:
+    # Scoped to the caller: an audit record is a statement about one
+    # learner's interview, and nobody else may read it.
+    record = await AuditRepository(session).get(audit_id, principal.user_id)
+    if record is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No such audit record")
+
+    return {
+        "id": record.id,
+        "rubric_version": record.rubric_version,
+        "scored_dimensions": record.scored_dimensions,
+        "excluded_dimensions": record.excluded_dimensions,
+        "prompt_hash": record.prompt_hash,
+        "model_id": record.model_id,
+        "at": record.at,
+    }
 
 
 # ── the accommodation & disclosure coach (M11) ───────────────────────────────
@@ -391,7 +413,6 @@ async def disclosure(step: str = "considerations") -> dict:
 
 
 class StoryRequest(BaseModel):
-    user_id: str
     job_context: str = Field(max_length=200)
     situation: str = Field(max_length=300)
     reading_level: Literal["standard", "easy_read"] = "easy_read"
@@ -399,7 +420,9 @@ class StoryRequest(BaseModel):
 
 
 @router.post("/stories", summary="Generate a social story")
-async def story(request: Annotated[StoryRequest, Body()]) -> dict:
+async def story(
+    principal: CurrentUser, request: Annotated[StoryRequest, Body()]
+) -> dict:
     try:
         return await _client.story(
             request.job_context, request.situation, request.reading_level, request.has_trainer

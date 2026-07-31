@@ -53,3 +53,7 @@ test-results/
 
 # trained weights live in the model registry, not in git
 services/speech/training/*.zip
+
+# local development database
+*.db
+*.db-journal

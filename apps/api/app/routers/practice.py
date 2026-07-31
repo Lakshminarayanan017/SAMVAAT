@@ -5,9 +5,9 @@ Two calls make the whole loop:
     POST /practice/session   -> the phrases to practise now
     POST /practice/review    -> record what happened, reschedule
 
-Auth lands in M1; until then the user id is supplied by the caller and every
-response is scoped to it. That is a development shortcut, marked as one, not a
-security model.
+Identity comes from the bearer token, never from the request body. Neither model
+here has a `user_id` field, so one learner cannot read or write another's
+progress even by accident.
 """
 
 from __future__ import annotations
@@ -15,19 +15,21 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.session import get_session
 from app.learning.content import get_block, load_blocks
 from app.learning.fsrs import Fsrs
 from app.learning.grading import Attempt, derive_grade
-from app.learning.repository import InMemoryCardRepository
 from app.learning.session import Candidate, build_session
+from app.repositories.learners import CardRepository
+from app.security.auth import CurrentUser
 
 router = APIRouter(prefix="/practice", tags=["practice"])
 
-# TEMPORARY: replaced by the Postgres repository in M1. Not persistent.
-_repository = InMemoryCardRepository()
+Session = Annotated[AsyncSession, Depends(get_session)]
 _fsrs = Fsrs()
 
 
@@ -35,7 +37,8 @@ _fsrs = Fsrs()
 
 
 class SessionRequest(BaseModel):
-    user_id: str
+    # No user_id. Identity comes from the bearer token, so one learner cannot
+    # read or write another's progress by changing a field.
     session_length_target_min: int = Field(
         default=5,
         ge=2,
@@ -65,7 +68,6 @@ class SessionResponse(BaseModel):
 
 
 class ReviewRequest(BaseModel):
-    user_id: str
     block_id: str
     correct: bool
     attempts: int = Field(default=1, ge=1)
@@ -95,14 +97,18 @@ class ReviewResponse(BaseModel):
 
 
 @router.post("/session", response_model=SessionResponse, summary="Build a practice session")
-async def create_session(request: Annotated[SessionRequest, Body()]) -> SessionResponse:
+async def create_session(
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[SessionRequest, Body()],
+) -> SessionResponse:
     blocks = load_blocks()
 
     if request.scenario_tags:
         wanted = set(request.scenario_tags)
         blocks = [b for b in blocks if wanted & set(b.get("scenario_tags", []))]
 
-    cards = _repository.all_for_user(request.user_id)
+    cards = await CardRepository(session).all_for_user(principal.user_id)
 
     candidates = [
         Candidate(
@@ -113,7 +119,7 @@ async def create_session(request: Annotated[SessionRequest, Body()]) -> SessionR
         for block in blocks
     ]
 
-    session = build_session(
+    plan = build_session(
         candidates,
         target_minutes=request.session_length_target_min,
         input_mode=request.input_mode,
@@ -121,7 +127,7 @@ async def create_session(request: Annotated[SessionRequest, Body()]) -> SessionR
     )
 
     items = []
-    for block_id in session.items:
+    for block_id in plan.items:
         block = get_block(block_id)
         if block is None:  # pragma: no cover - build/serve mismatch
             continue
@@ -136,13 +142,17 @@ async def create_session(request: Annotated[SessionRequest, Body()]) -> SessionR
 
     return SessionResponse(
         items=items,
-        estimated_seconds=session.estimated_seconds,
-        note=session.note,
+        estimated_seconds=plan.estimated_seconds,
+        note=plan.note,
     )
 
 
 @router.post("/review", response_model=ReviewResponse, summary="Record a review")
-async def record_review(request: Annotated[ReviewRequest, Body()]) -> ReviewResponse:
+async def record_review(
+    principal: CurrentUser,
+    session: Session,
+    request: Annotated[ReviewRequest, Body()],
+) -> ReviewResponse:
     if get_block(request.block_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown phrase '{request.block_id}'")
 
@@ -157,10 +167,11 @@ async def record_review(request: Annotated[ReviewRequest, Body()]) -> ReviewResp
     )
 
     now = datetime.now(timezone.utc)
-    existing = _repository.get(request.user_id, request.block_id)
+    cards = CardRepository(session)
+    existing = await cards.get(principal.user_id, request.block_id)
     card = _fsrs.review(existing, grade, now) if existing else _fsrs.new_card(grade, now)
 
-    _repository.save(request.user_id, request.block_id, card)
+    await cards.save(principal.user_id, request.block_id, card)
 
     interval_days = (card.due_at - now).total_seconds() / 86_400
 

@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import audio, conversation, health, practice
+from app.routers import audio, auth, conversation, health, practice
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,7 +39,20 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     from app import contracts  # noqa: F401
 
     log.info("contracts loaded")
+
+    # Development and tests only. Production schema changes go through Alembic,
+    # because `create_all` cannot alter an existing table and silently does
+    # nothing when a column has been added — which looks exactly like success.
+    from app.db.session import create_all, dispose
+    from app.models import tables  # noqa: F401  (registers the mappings)
+
+    if settings.database_url.startswith("sqlite"):
+        await create_all()
+        log.info("schema ensured (sqlite)")
+
     yield
+
+    await dispose()
     log.info("shutting down")
 
 
@@ -65,6 +78,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health.router)
+    app.include_router(auth.router)
     app.include_router(practice.router)
     app.include_router(audio.router)
     app.include_router(conversation.router)

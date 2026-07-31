@@ -37,7 +37,10 @@ class Settings(BaseSettings):
     # ── downstream services ───────────────────────────────────────────────────
     speech_service_url: str = "http://localhost:8100"
     genai_service_url: str = "http://localhost:8200"
-    database_url: str = "postgresql+asyncpg://samvaad:samvaad@localhost:5432/samvaad"
+    #: SQLite by default so a fresh clone runs with no container and no setup.
+    #: `check_production` refuses to let it reach production, where the URL is a
+    #: Supabase Postgres connection string.
+    database_url: str = "sqlite+aiosqlite:///./samvaad.db"
 
     #: Shared secret proving a caller is one of our own services. The speech and
     #: GenAI services run on hosts with public URLs; without this, anyone who
@@ -47,6 +50,13 @@ class Settings(BaseSettings):
     #: That is safe only because the downstream services fail closed in
     #: production — see packages/platform/samvaad_platform/security.py.
     service_token: str = ""
+
+    #: Signs our session tokens. The development default exists so a fresh clone
+    #: runs with no configuration; `check_production` refuses to let it reach
+    #: production, because a predictable signing key means anyone can mint a
+    #: token for any learner.
+    #: At least 32 bytes, or PyJWT warns that it is too short for SHA256.
+    jwt_secret: str = "dev-only-not-a-secret-please-change-this-in-production"
 
     # ── privacy (Ethics E3) ───────────────────────────────────────────────────
     audio_retention_hours: int = Field(
@@ -76,6 +86,10 @@ class Settings(BaseSettings):
             # Without it, our speech and GenAI hosts are open compute endpoints
             # with our name on the bill.
             problems.append("service_token is not set; downstream services are unauthenticated")
+        if self.jwt_secret.startswith("dev-only"):
+            problems.append("jwt_secret is still the development default; anyone can mint a token")
+        if self.database_url.startswith("sqlite"):
+            problems.append("database_url is SQLite; production needs Postgres")
         return problems
 
 

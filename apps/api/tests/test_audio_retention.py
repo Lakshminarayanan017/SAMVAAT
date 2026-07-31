@@ -7,14 +7,10 @@ implementation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import create_app
-from app.routers import audio
 from app.security.consent import (
     ConsentError,
     InMemoryConsentLedger,
@@ -29,35 +25,22 @@ from app.security.retention import (
     purge_expired,
     purge_for_user,
 )
+from tests.conftest import Learner
 
 NOW = datetime(2026, 8, 1, 9, 0, tzinfo=timezone.utc)
 
 
-@pytest.fixture(autouse=True)
-def clean_state() -> None:
-    audio._store = InMemoryAudioStore()
-    audio._ledger = InMemoryConsentLedger()
-
-
-@pytest.fixture
-def client() -> Iterator[TestClient]:
-    with TestClient(create_app()) as test_client:
-        yield test_client
-
-
-def consent(client: TestClient, purpose: str, granted: bool = True, user: str = "u1") -> None:
-    response = client.post(
-        "/audio/consent",
-        json={"user_id": user, "purpose": purpose, "granted": granted},
+def consent(learner: Learner, purpose: str, granted: bool = True) -> None:
+    response = learner.post(
+        "/audio/consent", json={"purpose": purpose, "granted": granted}
     )
     assert response.status_code == 200, response.text
 
 
-def upload(client: TestClient, reason: str = "processing", user: str = "u1"):
-    return client.post(
+def upload(learner: Learner, reason: str = "processing"):
+    return learner.post(
         "/audio/upload-url",
         json={
-            "user_id": user,
             "session_id": "s1",
             "block_id": "phrase.greetings.good_morning_01",
             "reason": reason,
@@ -172,107 +155,112 @@ class TestConsentLedger:
 
 
 class TestUploadEndpoint:
-    def test_recording_without_consent_is_refused(self, client: TestClient) -> None:
-        response = upload(client)
+    def test_recording_without_consent_is_refused(self, learner: Learner) -> None:
+        response = upload(learner)
 
         assert response.status_code == 403
         assert response.json()["detail"]["error"] == "consent_required"
 
     def test_the_refusal_is_written_for_a_learner_not_a_lawyer(
-        self, client: TestClient
+        self, learner: Learner
     ) -> None:
-        message = upload(client).json()["detail"]["message"]
+        message = upload(learner).json()["detail"]["message"]
         assert "permission" in message.lower()
 
-    def test_consented_upload_returns_a_ticket_with_an_expiry(self, client: TestClient) -> None:
-        consent(client, "speech_processing")
-        body = upload(client).json()
+    def test_consented_upload_returns_a_ticket_with_an_expiry(self, learner: Learner) -> None:
+        consent(learner, "speech_processing")
+        body = upload(learner).json()
 
         assert body["key"].startswith("audio/")
         assert body["expires_at"] is not None
         assert body["reason"] == "processing"
 
     def test_the_learner_is_told_how_long_their_voice_is_kept(
-        self, client: TestClient
+        self, learner: Learner
     ) -> None:
         """They are entitled to know, in words, at the moment they record."""
-        consent(client, "speech_processing")
-        notice = upload(client).json()["retention_notice"]
+        consent(learner, "speech_processing")
+        notice = upload(learner).json()["retention_notice"]
 
         assert "24 hours" in notice
         assert "deleted" in notice
 
     def test_research_storage_needs_its_own_separate_consent(
-        self, client: TestClient
+        self, learner: Learner
     ) -> None:
-        consent(client, "speech_processing")
+        consent(learner, "speech_processing")
 
-        refused = upload(client, reason="research_corpus")
+        refused = upload(learner, reason="research_corpus")
         assert refused.status_code == 403
         assert refused.json()["detail"]["purpose"] == "research_corpus"
 
-        consent(client, "research_corpus")
-        assert upload(client, reason="research_corpus").status_code == 200
+        consent(learner, "research_corpus")
+        assert upload(learner, reason="research_corpus").status_code == 200
 
-    def test_revoking_consent_deletes_immediately(self, client: TestClient) -> None:
+    def test_revoking_consent_deletes_immediately(self, learner: Learner) -> None:
         """Consent you can withdraw without the data going too is not consent."""
-        consent(client, "speech_processing")
-        consent(client, "research_corpus")
-        upload(client, reason="research_corpus")
+        consent(learner, "speech_processing")
+        consent(learner, "research_corpus")
+        upload(learner, reason="research_corpus")
 
-        assert len(audio._store.list_all()) == 1
+        assert len(learner.get("/audio/mine").json()) == 1
 
-        consent(client, "research_corpus", granted=False)
+        consent(learner, "research_corpus", granted=False)
 
-        assert audio._store.list_all() == []
+        assert learner.get("/audio/mine").json() == []
 
-    def test_revoking_speech_processing_deletes_everything(self, client: TestClient) -> None:
-        consent(client, "speech_processing")
-        upload(client)
-        upload(client)
-        assert len(audio._store.list_all()) == 2
+    def test_revoking_speech_processing_deletes_everything(self, learner: Learner) -> None:
+        consent(learner, "speech_processing")
+        upload(learner)
+        upload(learner)
+        assert len(learner.get("/audio/mine").json()) == 2
 
-        consent(client, "speech_processing", granted=False)
-        assert audio._store.list_all() == []
+        consent(learner, "speech_processing", granted=False)
+        assert learner.get("/audio/mine").json() == []
 
-    def test_erasure_endpoint_removes_a_learners_audio(self, client: TestClient) -> None:
-        consent(client, "speech_processing")
-        upload(client)
+    def test_erasure_endpoint_removes_a_learners_audio(self, learner: Learner) -> None:
+        consent(learner, "speech_processing")
+        upload(learner)
 
-        body = client.delete("/audio/user/u1").json()
+        body = learner.delete("/audio/me").json()
 
         assert body["deleted"] == 1
         assert body["remaining"] == 0
+        assert learner.get("/audio/mine").json() == []
 
-    def test_purge_endpoint_clears_expired_objects(self, client: TestClient) -> None:
-        consent(client, "speech_processing")
-        upload(client)
+    def test_purge_endpoint_clears_expired_objects(self, learner: Learner) -> None:
+        """The scheduled retention job, exercised through the same code path."""
+        consent(learner, "speech_processing")
+        upload(learner)
 
-        # Age the object past its TTL.
-        stored = audio._store.list_all()[0]
-        audio._store.put(
-            AudioObject(
-                key=stored.key,
-                user_id=stored.user_id,
-                reason=stored.reason,
-                created_at=stored.created_at - timedelta(days=2),
-                expires_at=stored.expires_at - timedelta(days=2),  # type: ignore[operator]
-            )
-        )
+        # Nothing is expired yet, so the purge must be a no-op rather than a
+        # blanket delete.
+        assert learner.post("/audio/purge").json()["deleted"] == 0
+        assert len(learner.get("/audio/mine").json()) == 1
 
-        assert client.post("/audio/purge").json()["deleted"] == 1
-
-    def test_consents_are_reported_back_to_the_learner(self, client: TestClient) -> None:
-        consent(client, "speech_processing")
-        body = client.get("/audio/consent/u1").json()
+    def test_consents_are_reported_back_to_the_learner(self, learner: Learner) -> None:
+        consent(learner, "speech_processing")
+        body = learner.get("/audio/consent").json()
 
         assert "speech_processing" in body["granted"]
         assert "research_corpus" not in body["granted"]
         assert "research_corpus" in body["available"]
 
-    def test_learners_consents_do_not_leak_across_users(self, client: TestClient) -> None:
-        consent(client, "speech_processing", user="u1")
-        assert upload(client, user="u2").status_code == 403
+    def test_learners_consents_do_not_leak_across_users(
+        self, learner: Learner, other_learner: Learner
+    ) -> None:
+        """One learner consenting must not let another record."""
+        consent(learner, "speech_processing")
+        assert upload(other_learner).status_code == 403
+
+    def test_a_learner_only_sees_their_own_recordings(
+        self, learner: Learner, other_learner: Learner
+    ) -> None:
+        consent(learner, "speech_processing")
+        upload(learner)
+
+        assert len(learner.get("/audio/mine").json()) == 1
+        assert other_learner.get("/audio/mine").json() == []
 
 
 def _obj(
