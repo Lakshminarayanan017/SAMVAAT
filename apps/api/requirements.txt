@@ -7,6 +7,14 @@ pydantic>=2.9,<3.0
 pydantic-settings>=2.6,<3.0
 httpx>=0.27,<0.29
 
+# Structured logging, request tracing, redaction, service auth and rate limiting,
+# shared with the speech and GenAI services.
+-e ../../packages/platform
+
+# auth (M17)
+pyjwt[crypto]>=2.9,<3.0
+argon2-cffi>=23.1,<24.0
+
 # database (M1 onwards)
 sqlalchemy>=2.0,<2.1
 asyncpg>=0.30,<0.31

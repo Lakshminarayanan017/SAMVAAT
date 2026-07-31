@@ -1,0 +1,23 @@
+[project]
+name = "samvaad-platform"
+version = "0.1.0"
+description = "Cross-service platform primitives: structured logging, request tracing, redaction, service auth, rate limiting."
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115,<0.116",
+    "starlette>=0.41,<0.42",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["samvaad_platform"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
