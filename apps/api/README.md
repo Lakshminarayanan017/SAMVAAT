@@ -52,6 +52,57 @@ out later stops being a deployment change and becomes a rewrite.
 
 ---
 
+## The practice loop (M4)
+
+Two calls make the whole loop:
+
+```
+POST /practice/session   -> the phrases to practise now
+POST /practice/review    -> record what happened, reschedule
+```
+
+**Scheduling** is [FSRS-4.5](app/learning/fsrs.py) — the published, openly specified algorithm,
+not an invention of ours. SM-2 (the Anki default) systematically over-schedules easy material
+and under-schedules hard material.
+
+Nothing in the scheduling maths knows about disabilities, deliberately. The accessibility work
+lives in **how a grade is derived**, not in the algorithm. Varying the maths per learner would
+make progress incomparable and would quietly encode assumptions about who learns "slower".
+
+### Grading without self-rating, and without timing
+
+Every other spaced-repetition app asks the learner "how well did you know that?". We cannot:
+many of our learners cannot reliably self-assess, and a self-rating button asks someone to judge
+themselves several times a minute, forever.
+
+So [`derive_grade`](app/learning/grading.py) reads observable behaviour instead — correctness,
+attempts, hints. And it **cannot see response time**:
+
+> `Attempt` has no duration field and `derive_grade` takes no timing argument. That is the
+> enforcement, not a convention. A learner with dysarthria, a stammer or cerebral palsy responds
+> slower *because of the disability* — feeding latency into the scheduler would re-teach material
+> they already know, purely for being disabled, and it would look like a neutral algorithm doing
+> it. Ethics **E6** and **E2**, with a test asserting no such field exists.
+
+A transcription too uncertain to trust returns a neutral grade and records **no lapse**. An ASR
+weakness must never surface as the learner's weakness.
+
+### Session assembly
+
+[`build_session`](app/learning/session.py) turns "what is due" into "what this session contains":
+
+| Constraint | Why |
+|---|---|
+| Length is an **item count**, never a countdown | A countdown is a time-pressure mechanic (E6) |
+| Slower input modes get **fewer items**, not a faster pace | AAC and switch scanning are slower — that is the modality, not the learner |
+| Easy-Read profiles get a lighter session | One idea per screen limits how much a session may contain |
+| At most **2 hard items**, and it opens on a likely win | A session that starts with four lapsed cards is one nobody comes back from |
+
+The hard-item cap **outranks session length**: topping a short session up with lapsed cards
+defeats the protection the cap exists for.
+
+---
+
 ## Health endpoints
 
 | Endpoint | Purpose | Checks dependencies? |

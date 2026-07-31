@@ -48,11 +48,17 @@ jobs:
       - name: Typecheck
         run: npm run typecheck -w @samvaad/contracts
 
-      # Consumed by the api job so both languages test the exact same artefact.
+      # Consumed by the api job so both languages test the exact same artefacts.
       - uses: actions/upload-artifact@v4
         with:
           name: generated-contracts
           path: packages/contracts/generated/
+          retention-days: 1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: content-bank
+          path: packages/content/dist/
           retention-days: 1
 
   api:
@@ -72,6 +78,13 @@ jobs:
         with:
           name: generated-contracts
           path: packages/contracts/generated/
+
+      # The practice loop serves the real phrase bank, so its tests need the
+      # same built artefact the content job validated.
+      - uses: actions/download-artifact@v4
+        with:
+          name: content-bank
+          path: packages/content/dist/
 
       - run: pip install -r requirements-dev.txt
         working-directory: apps/api
