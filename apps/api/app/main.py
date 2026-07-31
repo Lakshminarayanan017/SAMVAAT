@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import audio, health, practice
+from app.routers import audio, conversation, health, practice
 
 logging.basicConfig(
     level=logging.INFO,
@@ -67,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(practice.router)
     app.include_router(audio.router)
+    app.include_router(conversation.router)
 
     return app
 

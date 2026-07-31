@@ -60,19 +60,25 @@ async def readyz(response: Response) -> Readiness:
     settings = get_settings()
     dependencies: list[DependencyStatus] = []
 
-    # Speech service. Degraded rather than fatal: drills, role-play and every
-    # non-speech modality keep working without it, which is the whole point of
-    # normalising every input mode to canonical_text (ADR-0002).
-    try:
-        async with httpx.AsyncClient(timeout=2.0) as client:
-            r = await client.get(f"{settings.speech_service_url}/healthz")
-        dependencies.append(
-            DependencyStatus(name="speech", healthy=r.status_code == 200)
-        )
-    except Exception as exc:  # noqa: BLE001 - any failure is simply "not reachable"
-        dependencies.append(
-            DependencyStatus(name="speech", healthy=False, detail=type(exc).__name__)
-        )
+    # Both downstream services are degraded-not-fatal. Drills and every
+    # non-speech modality keep working without speech, which is the whole point
+    # of normalising every input mode to canonical_text (ADR-0002); and the
+    # practice loop is entirely independent of GenAI.
+    #
+    # Probed separately so an incident says WHICH one broke. "Something is
+    # unhealthy" is not a diagnosis.
+    for name, url in (
+        ("speech", settings.speech_service_url),
+        ("genai", settings.genai_service_url),
+    ):
+        try:
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                r = await client.get(f"{url}/healthz")
+            dependencies.append(DependencyStatus(name=name, healthy=r.status_code == 200))
+        except Exception as exc:  # noqa: BLE001 - any failure is simply "not reachable"
+            dependencies.append(
+                DependencyStatus(name=name, healthy=False, detail=type(exc).__name__)
+            )
 
     warnings = settings.check_production()
     ready = all(d.healthy for d in dependencies) and not warnings

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import type { ContentBlock } from '@samvaad/contracts';
 
 import { AnnouncerProvider } from '@/a11y/Announcer';
-import { ChannelComparison } from '@/features/channel-comparison/ChannelComparison';
+import { App } from '@/App';
 import { CapabilitiesProvider } from '@/services/capabilities';
 import { applyTheme } from '@/design-system/tokens';
 import './styles/global.css';
@@ -37,10 +37,7 @@ createRoot(root).render(
   <StrictMode>
     <CapabilitiesProvider>
       <AnnouncerProvider>
-        <a href="#main" className="skip-link">
-          Skip to main content
-        </a>
-        <ChannelComparison blocks={blocks as unknown as ContentBlock[]} />
+        <App blocks={blocks as unknown as ContentBlock[]} />
       </AnnouncerProvider>
     </CapabilitiesProvider>
   </StrictMode>,

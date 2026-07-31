@@ -31,7 +31,15 @@ const CHANNELS: { channel: OutputChannel; label: string; serves: string }[] = [
   { channel: 'isl', label: 'Indian Sign Language', serves: 'P2' },
 ];
 
-export function ChannelComparison({ blocks }: { blocks: ContentBlock[] }) {
+export function ChannelComparison({
+  blocks,
+  embedded = false,
+}: {
+  blocks: ContentBlock[];
+  /** True when the app shell already provides the <main> landmark and skip link.
+   *  Two <main> elements on a page is an accessibility error, not a detail. */
+  embedded?: boolean;
+}) {
   const [personaId, setPersonaId] = useState<string>(PERSONAS[0]!.id);
   const [blockId, setBlockId] = useState<string>(blocks[0]!.id);
   const [lastResponse, setLastResponse] = useState<LearnerResponse | null>(null);
@@ -39,15 +47,23 @@ export function ChannelComparison({ blocks }: { blocks: ContentBlock[] }) {
   const persona = PERSONAS.find((p) => p.id === personaId) ?? PERSONAS[0]!;
   const block = blocks.find((b) => b.id === blockId) ?? blocks[0]!;
 
+  // Embedded inside the app shell, the shell owns the <main> landmark and the
+  // heading level starts at h2. Standalone, this view is the whole page.
+  const Frame = embedded ? 'div' : 'main';
+  const Heading = embedded ? 'h2' : 'h1';
+
   return (
-    <main
-      id="main"
-      tabIndex={-1}
-      style={{ padding: 'var(--space-lg, 1.5rem)', maxWidth: '80rem', margin: '0 auto' }}
+    <Frame
+      {...(embedded ? {} : { id: 'main', tabIndex: -1 })}
+      style={
+        embedded
+          ? undefined
+          : { padding: 'var(--space-lg, 1.5rem)', maxWidth: '80rem', margin: '0 auto' }
+      }
     >
-      <h1 style={{ fontSize: 'var(--type-xxl, 2.25rem)', marginTop: 0 }}>
+      <Heading style={{ fontSize: 'var(--type-xxl, 2.25rem)', marginTop: 0 }}>
         One lesson, every learner
-      </h1>
+      </Heading>
       <p style={{ maxWidth: '60ch', color: 'var(--colour-fg-muted)', fontSize: '1.125rem' }}>
         The block below was authored <strong>once</strong>, with no chosen rendering. Everything
         you see is the Modality Router turning that single source into the channels each learner
@@ -152,7 +168,7 @@ export function ChannelComparison({ blocks }: { blocks: ContentBlock[] }) {
           <code>{JSON.stringify(block, null, 2)}</code>
         </pre>
       </section>
-    </main>
+    </Frame>
   );
 }
 

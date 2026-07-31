@@ -36,7 +36,17 @@ class Settings(BaseSettings):
 
     # ── downstream services ───────────────────────────────────────────────────
     speech_service_url: str = "http://localhost:8100"
+    genai_service_url: str = "http://localhost:8200"
     database_url: str = "postgresql+asyncpg://samvaad:samvaad@localhost:5432/samvaad"
+
+    #: Shared secret proving a caller is one of our own services. The speech and
+    #: GenAI services run on hosts with public URLs; without this, anyone who
+    #: finds the URL can spend our CPU and our LLM budget.
+    #:
+    #: Unset in development so a fresh clone runs with no configuration at all.
+    #: That is safe only because the downstream services fail closed in
+    #: production — see packages/platform/samvaad_platform/security.py.
+    service_token: str = ""
 
     # ── privacy (Ethics E3) ───────────────────────────────────────────────────
     audio_retention_hours: int = Field(
@@ -58,6 +68,14 @@ class Settings(BaseSettings):
             problems.append("database_url still points at localhost")
         if any("localhost" in o for o in self.cors_origins):
             problems.append("cors_origins still contains a localhost origin")
+        if "localhost" in self.speech_service_url:
+            problems.append("speech_service_url still points at localhost")
+        if "localhost" in self.genai_service_url:
+            problems.append("genai_service_url still points at localhost")
+        if not self.service_token:
+            # Without it, our speech and GenAI hosts are open compute endpoints
+            # with our name on the bill.
+            problems.append("service_token is not set; downstream services are unauthenticated")
         return problems
 
 
