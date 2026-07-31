@@ -1,0 +1,42 @@
+{
+  "_comment": "P3 (Arjun) — cerebral palsy with dysarthric speech and limited motor control. Two-switch row-column scanning, 88px targets, atypical speech status driving ASR personalisation (M8). Note the scoring weights: fluency down-weighted, intelligibility up-weighted (ADR-0003).",
+  "user_id": "usr_arjun_demo",
+  "version": 2,
+  "input_channels": ["speech", "switch", "text"],
+  "output_channels": ["audio", "captioned_text"],
+  "text_complexity": "standard",
+  "speech_status": "atypical",
+  "primary_language": "en-IN",
+  "presentation": {
+    "audio_rate": 1.0,
+    "contrast_theme": "high_contrast",
+    "colour_scheme": "dark",
+    "motion_reduced": true,
+    "target_size_px": 88,
+    "captions_enabled": true,
+    "one_step_per_screen": false
+  },
+  "interaction": {
+    "switch_scanning": { "enabled": true, "switch_count": 2, "dwell_ms": 1800, "scan_mode": "row_column" },
+    "session_length_target_min": 8
+  },
+  "scoring_weights": {
+    "intelligibility": 0.4,
+    "pronunciation": 0.1,
+    "pace": 0.05,
+    "fluency": 0.1,
+    "confidence": 0.35
+  },
+  "goals": {
+    "job_context": "packaging unit operator",
+    "target_scenarios": ["asking_for_help", "reporting_progress", "safety_escalation"]
+  },
+  "support": { "guardian_managed": false, "trainer_user_id": "usr_trainer_demo", "institution_id": "inst_demo" },
+  "enrolment": {
+    "phrases_completed": 30,
+    "phrases_required": 30,
+    "complete": true,
+    "adapter_ref": "adapters/usr_arjun_demo/whisper-small-lora-v3.onnx"
+  },
+  "created_at": "2026-07-20T11:30:00.000Z"
+}

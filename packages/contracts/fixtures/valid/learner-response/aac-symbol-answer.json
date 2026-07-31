@@ -1,0 +1,19 @@
+{
+  "_comment": "P4 (Fatima) answering an interview question by tapping picture symbols. The symbols compose to canonical_text, so this response flows through exactly the same scoring, scheduling and dashboards as a spoken one (ADR-0002).",
+  "session_id": "sess_01HQ8ZK3T9",
+  "block_id": "interview.hr.strength_01",
+  "input_mode": "aac",
+  "canonical_text": "i am good at checking things carefully",
+  "confidence": 1.0,
+  "raw": {
+    "symbol_sequence": [2340, 6479, 11902, 3311]
+  },
+  "timing": {
+    "started_at": "2026-07-31T09:14:02.000Z",
+    "submitted_at": "2026-07-31T09:15:47.000Z",
+    "attempts": 1
+  },
+  "self_report": { "confidence": 4 },
+  "offline": false,
+  "cap_version": 3
+}

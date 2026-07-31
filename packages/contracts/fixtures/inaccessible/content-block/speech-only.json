@@ -1,0 +1,22 @@
+{
+  "_comment": "Schema-VALID but accessibility-INVALID on purpose. Accepts only speech input (violates A11Y-3, excluding P2 and P4) and sets requires_speech=true (violates A11Y-6). This fixture proves the accessibility gate actually catches exclusion that the schema alone would let through.",
+  "id": "phrase.greeting.speech_only_01",
+  "kind": "phrase",
+  "canonical_text": "Good morning, I'm Ravi from the packaging team.",
+  "intent": "self_introduction",
+  "difficulty": 2,
+  "representations": {
+    "audio_native": { "uri": "content/audio/intro_01.mp3", "duration_ms": 2400 },
+    "caption": "Good morning, I'm Ravi from the packaging team.",
+    "easy_read": "I say good morning.\nI say my name.\nI say my team."
+  },
+  "interaction": {
+    "accepted_input_modes": ["speech"]
+  },
+  "a11y": {
+    "requires_audio": false,
+    "requires_vision": false,
+    "requires_speech": true
+  },
+  "version": 1
+}

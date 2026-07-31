@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "common.schema.json",
+  "title": "Common",
+  "description": "Shared enumerations and value objects. Every other contract references this file, so a change here is a breaking change everywhere.",
+
+  "$defs": {
+    "InputMode": {
+      "title": "InputMode",
+      "description": "How a learner produces an answer. Every mode normalises to LearnerResponse.canonical_text (ADR-0002).",
+      "type": "string",
+      "enum": ["speech", "text", "aac", "sign", "switch"]
+    },
+
+    "OutputChannel": {
+      "title": "OutputChannel",
+      "description": "How content is presented to a learner. The Modality Router composes one primary channel with any number of simultaneous support channels (ADR-0001).",
+      "type": "string",
+      "enum": ["audio", "captioned_text", "isl", "pictograph", "easy_read"]
+    },
+
+    "TextComplexity": {
+      "title": "TextComplexity",
+      "description": "'easy_read' enforces the rules in docs/ACCESSIBILITY.md: 15 words per sentence, one idea per screen, supporting image per idea.",
+      "type": "string",
+      "enum": ["standard", "easy_read"]
+    },
+
+    "SpeechStatus": {
+      "title": "SpeechStatus",
+      "description": "Drives ASR personalisation (M8) and the PPI dimension weighting (M7). Self-declared during onboarding, never inferred.",
+      "type": "string",
+      "enum": ["typical", "atypical", "nonverbal", "undeclared"]
+    },
+
+    "Difficulty": {
+      "title": "Difficulty",
+      "description": "CEFR-mapped difficulty tier. 1 = A1 survival phrases, 5 = C1 nuanced negotiation.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+
+    "AssetRef": {
+      "title": "AssetRef",
+      "description": "A pointer to a media object in storage. Never an inline blob.",
+      "type": "object",
+      "required": ["uri"],
+      "additionalProperties": false,
+      "properties": {
+        "uri": { "type": "string", "minLength": 1 },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "mime_type": { "type": "string" },
+        "checksum": { "type": "string" }
+      }
+    },
+
+    "Pictograph": {
+      "title": "Pictograph",
+      "description": "A symbol from a CC-licensed AAC set. Mappings are human-verified; automatic mapping produces embarrassing results.",
+      "type": "object",
+      "required": ["set", "id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "set": { "type": "string", "enum": ["arasaac", "mulberry"] },
+        "id": { "type": ["integer", "string"] },
+        "label": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string" }
+      }
+    },
+
+    "IslClip": {
+      "title": "IslClip",
+      "description": "A human-signed Indian Sign Language video clip. We use recorded clips, not a generated avatar - a bad avatar is worse than none.",
+      "type": "object",
+      "required": ["uri", "gloss"],
+      "additionalProperties": false,
+      "properties": {
+        "uri": { "type": "string", "minLength": 1 },
+        "gloss": {
+          "type": "string",
+          "description": "ISL gloss notation. ISL grammar is not English word order; the gloss records the actual signed sequence."
+        },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "signer_id": { "type": "string" }
+      }
+    }
+  }
+}

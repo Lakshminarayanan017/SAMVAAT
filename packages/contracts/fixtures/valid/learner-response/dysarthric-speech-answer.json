@@ -1,0 +1,21 @@
+{
+  "_comment": "P3 (Arjun) speaking with dysarthria, captured offline. confidence is 0.61 — below threshold, so the client asks him to confirm rather than scoring it wrong (ADR-0002). audio_ref is TTL-tagged and hard-deleted within 24h (Ethics E3).",
+  "session_id": "sess_01HQ8ZM7B2",
+  "block_id": "phrase.clarify.repeat_request_01",
+  "input_mode": "speech",
+  "canonical_text": "could you please repeat that",
+  "confidence": 0.61,
+  "raw": {
+    "audio_ref": "audio/2026/07/31/sess_01HQ8ZM7B2/att_004.wav",
+    "asr_text": "cou you pease repea that",
+    "asr_model": "whisper-small+lora:user_9f2c@v3"
+  },
+  "timing": {
+    "started_at": "2026-07-31T09:20:11.000Z",
+    "submitted_at": "2026-07-31T09:20:39.000Z",
+    "attempts": 2
+  },
+  "self_report": { "confidence": 3, "difficulty_felt": 4 },
+  "offline": true,
+  "cap_version": 2
+}

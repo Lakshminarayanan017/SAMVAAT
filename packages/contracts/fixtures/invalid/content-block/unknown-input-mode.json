@@ -1,0 +1,21 @@
+{
+  "_comment": "Schema-invalid on purpose. 'gesture' is not a member of the InputMode enum, and difficulty 9 is out of the 1-5 range. New modalities must be added to common.schema.json first, so the router is guaranteed to have a handler.",
+  "id": "phrase.greeting.hello_01",
+  "kind": "phrase",
+  "canonical_text": "Good morning.",
+  "intent": "greeting",
+  "difficulty": 9,
+  "representations": {
+    "caption": "Good morning.",
+    "easy_read": "I say good morning."
+  },
+  "interaction": {
+    "accepted_input_modes": ["speech", "gesture"]
+  },
+  "a11y": {
+    "requires_audio": false,
+    "requires_vision": false,
+    "requires_speech": false
+  },
+  "version": 1
+}

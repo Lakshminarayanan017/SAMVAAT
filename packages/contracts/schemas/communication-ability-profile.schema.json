@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "communication-ability-profile.schema.json",
+  "title": "CommunicationAbilityProfile",
+  "description": "The single most important object in the system. Describes which channels a learner can actually use. The Modality Router, the scoring weights, the recommender and every dashboard read this. Built during onboarding (M1), versioned - never updated in place, because progress data is only comparable within a version.",
+
+  "type": "object",
+  "required": ["user_id", "version", "input_channels", "output_channels", "text_complexity", "speech_status"],
+  "additionalProperties": false,
+
+  "properties": {
+    "user_id": { "type": "string", "minLength": 1 },
+    "version": { "type": "integer", "minimum": 1 },
+
+    "input_channels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/InputMode" },
+      "description": "What the learner can use to answer. At least one is required - a profile with none cannot be served."
+    },
+
+    "output_channels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/OutputChannel" },
+      "description": "What the learner can use to receive. Ordered by preference; index 0 is the primary channel and the rest render simultaneously as support."
+    },
+
+    "text_complexity": { "$ref": "common.schema.json#/$defs/TextComplexity" },
+    "speech_status": { "$ref": "common.schema.json#/$defs/SpeechStatus" },
+
+    "primary_language": {
+      "type": "string",
+      "enum": ["en-IN", "ta-IN", "hi-IN"],
+      "default": "en-IN"
+    },
+
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "audio_rate": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1.5,
+          "default": 1.0,
+          "description": "Playback rate for narrated audio. Below 1.0 uses the recorded slow track where available."
+        },
+        "contrast_theme": { "type": "string", "enum": ["standard", "high_contrast"], "default": "standard" },
+        "colour_scheme": { "type": "string", "enum": ["light", "dark", "system"], "default": "system" },
+        "motion_reduced": { "type": "boolean", "default": false },
+        "target_size_px": {
+          "type": "integer",
+          "minimum": 44,
+          "maximum": 88,
+          "default": 44,
+          "description": "Minimum interactive target size. 44 is the WCAG 2.2 AA floor; motor-impaired profiles raise it."
+        },
+        "captions_enabled": { "type": "boolean", "default": true },
+        "one_step_per_screen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Forced true for easy_read profiles. Never more than one idea on screen."
+        }
+      }
+    },
+
+    "interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "switch_scanning": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "switch_count": { "type": "integer", "enum": [1, 2], "default": 2 },
+            "dwell_ms": { "type": "integer", "minimum": 300, "maximum": 5000, "default": 1200 },
+            "scan_mode": { "type": "string", "enum": ["linear", "row_column"], "default": "row_column" }
+          }
+        },
+        "session_length_target_min": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 30,
+          "default": 5,
+          "description": "How long a comfortable session is. The session builder respects this. It is NOT a time limit on any single answer (Ethics E6)."
+        }
+      }
+    },
+
+    "scoring_weights": {
+      "type": "object",
+      "description": "Per-dimension weights for the composite Personal Progress Index (ADR-0003). Visible to the learner and the trainer - never hidden. A profile with a stammer down-weights fluency and up-weights intelligibility.",
+      "additionalProperties": false,
+      "properties": {
+        "intelligibility": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.3 },
+        "pronunciation": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.2 },
+        "pace": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.15 },
+        "fluency": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.15 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.2 }
+      }
+    },
+
+    "goals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "job_context": {
+          "type": "string",
+          "description": "Free text, e.g. 'packaging unit operator'. Grounds social-story and scenario generation in the learner's actual workplace."
+        },
+        "target_scenarios": { "type": "array", "items": { "type": "string" }, "default": [] }
+      }
+    },
+
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guardian_managed": { "type": "boolean", "default": false },
+        "guardian_user_id": { "type": "string" },
+        "trainer_user_id": { "type": "string" },
+        "institution_id": { "type": "string" }
+      }
+    },
+
+    "enrolment": {
+      "type": "object",
+      "description": "Speech enrolment state for personalised ASR (M8). Always skippable and resumable - never a wall between the learner and the product.",
+      "additionalProperties": false,
+      "properties": {
+        "phrases_completed": { "type": "integer", "minimum": 0, "default": 0 },
+        "phrases_required": { "type": "integer", "minimum": 0, "default": 30 },
+        "complete": { "type": "boolean", "default": false },
+        "adapter_ref": { "type": "string" }
+      }
+    },
+
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

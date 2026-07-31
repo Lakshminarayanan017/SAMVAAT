@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "content-block.schema.json",
+  "title": "ContentBlock",
+  "description": "A piece of learning content with a canonical meaning and a bundle of representations - but NO chosen rendering. The Modality Router selects representations at runtime from the learner's Communication Ability Profile (ADR-0001). Content authors never decide how something looks, which is why no module can ship inaccessible.",
+
+  "type": "object",
+  "required": ["id", "kind", "canonical_text", "intent", "difficulty", "representations", "interaction", "a11y", "version"],
+  "additionalProperties": false,
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable dotted identifier, e.g. 'phrase.clarify.repeat_request_01'. Never reused, never renamed - progress data references it.",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+
+    "kind": {
+      "type": "string",
+      "enum": ["phrase", "scenario_turn", "social_story_panel", "interview_question", "instruction"]
+    },
+
+    "canonical_text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The meaning, in plain standard English. This is the reference for scoring, never the thing rendered verbatim to every learner."
+    },
+
+    "intent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The communicative function, e.g. 'request_clarification'. Drives scenario matching and the error signature used by the recommender."
+    },
+
+    "difficulty": { "$ref": "common.schema.json#/$defs/Difficulty" },
+
+    "scenario_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "e.g. ['supervisor', 'shopfloor', 'first_week']. Used for RAG filtering in the role-play engine."
+    },
+
+    "representations": {
+      "type": "object",
+      "description": "One representation per channel. Missing entries trigger a documented fallback chain and a build-time CI warning - never a runtime surprise for a learner.",
+      "additionalProperties": false,
+      "properties": {
+        "audio_native": { "$ref": "common.schema.json#/$defs/AssetRef" },
+        "audio_slow": { "$ref": "common.schema.json#/$defs/AssetRef" },
+        "isl_clip": { "$ref": "common.schema.json#/$defs/IslClip" },
+        "pictographs": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/Pictograph" }
+        },
+        "easy_read": {
+          "type": "string",
+          "description": "Easy-Read paraphrase. Human-written, machine-linted: max 15 words per sentence, one clause per line."
+        },
+        "caption": {
+          "type": "string",
+          "description": "Caption text for the audio. Verbatim, not a paraphrase - captions that paraphrase are a documented failure for Deaf users."
+        },
+        "phonemes": {
+          "type": "string",
+          "description": "IPA phoneme sequence. G2P-generated, human spot-checked. Feeds forced alignment and GOP scoring (M6)."
+        }
+      }
+    },
+
+    "interaction": {
+      "type": "object",
+      "required": ["accepted_input_modes"],
+      "additionalProperties": false,
+      "properties": {
+        "accepted_input_modes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/InputMode" },
+          "description": "Which input modes may answer this block. A block accepting only 'speech' excludes P2 and P4 and will fail contract validation unless a non-speech sibling exists."
+        },
+        "target_response": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["phrase_match", "intent_match", "free_form", "choice"] },
+            "ref": { "type": "string" },
+            "choices": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "hints": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "distractors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Plausible wrong options for recognition exercises."
+        },
+        "common_errors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Known learner errors, used to pre-write targeted coaching rather than generating it."
+        }
+      }
+    },
+
+    "a11y": {
+      "type": "object",
+      "description": "Asserted in CI. No ContentBlock may require a channel that a supported profile lacks unless an equivalent representation exists. This is the automated guarantee behind 'accessibility as architecture'.",
+      "required": ["requires_audio", "requires_vision", "requires_speech"],
+      "additionalProperties": false,
+      "properties": {
+        "requires_audio": { "type": "boolean", "default": false },
+        "requires_vision": { "type": "boolean", "default": false },
+        "requires_speech": { "type": "boolean", "default": false },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "version": { "type": "integer", "minimum": 1 },
+
+    "source": {
+      "type": "string",
+      "enum": ["authored", "generated", "generated_reviewed"],
+      "default": "authored",
+      "description": "'generated' content is labelled as AI-generated to the learner until a trainer reviews it (Ethics E5)."
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "interview.hr.strength_01",
+  "kind": "interview_question",
+  "canonical_text": "Tell me about a strength you would bring to this role.",
+  "intent": "self_advocacy",
+  "difficulty": 3,
+  "scenario_tags": ["interview", "hr", "behavioural"],
+  "representations": {
+    "audio_native": { "uri": "content/audio/interview_strength_01.mp3", "duration_ms": 2600, "mime_type": "audio/mpeg" },
+    "isl_clip": { "uri": "content/isl/interview_strength_01.mp4", "gloss": "YOU STRONG-POINT WHAT TELL-ME", "duration_ms": 3400 },
+    "pictographs": [
+      { "set": "arasaac", "id": 6479, "label": "strong" },
+      { "set": "arasaac", "id": 11331, "label": "tell" }
+    ],
+    "easy_read": "What are you good at?\nTell me one thing.\nSay why it helps this job.",
+    "caption": "Tell me about a strength you would bring to this role.",
+    "phonemes": "t ɛ l m iː ə ˈb aʊ t ə s t r ɛ ŋ θ"
+  },
+  "interaction": {
+    "accepted_input_modes": ["speech", "text", "aac", "switch"],
+    "target_response": { "type": "free_form" },
+    "hints": ["Name one strength", "Give one example of using it", "Say how it helps the job"]
+  },
+  "a11y": {
+    "requires_audio": false,
+    "requires_vision": false,
+    "requires_speech": false,
+    "notes": "Answered by AAC composition or typing when speech is unavailable — a mock interview is a first-class path for non-speaking learners, not a fallback."
+  },
+  "version": 1,
+  "source": "authored"
+}

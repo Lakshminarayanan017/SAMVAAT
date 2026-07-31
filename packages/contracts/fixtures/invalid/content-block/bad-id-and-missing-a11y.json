@@ -1,0 +1,16 @@
+{
+  "_comment": "Schema-invalid on purpose. Two violations: 'id' breaks the dotted-lowercase pattern, and the required 'a11y' object is absent. Validation must reject this.",
+  "id": "Phrase-Clarify-01",
+  "kind": "phrase",
+  "canonical_text": "Could you please repeat that?",
+  "intent": "request_clarification",
+  "difficulty": 2,
+  "representations": {
+    "caption": "Could you please repeat that?",
+    "easy_read": "I ask again."
+  },
+  "interaction": {
+    "accepted_input_modes": ["speech", "text"]
+  },
+  "version": 1
+}

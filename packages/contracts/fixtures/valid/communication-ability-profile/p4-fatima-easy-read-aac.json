@@ -1,0 +1,42 @@
+{
+  "_comment": "P4 (Fatima) — intellectual disability. Easy-Read primary with pictograph and slow audio support, AAC input, one step per screen. The Modality Router reads exactly this to decide every rendering.",
+  "user_id": "usr_fatima_demo",
+  "version": 3,
+  "input_channels": ["aac", "speech"],
+  "output_channels": ["easy_read", "pictograph", "audio"],
+  "text_complexity": "easy_read",
+  "speech_status": "typical",
+  "primary_language": "en-IN",
+  "presentation": {
+    "audio_rate": 0.8,
+    "contrast_theme": "standard",
+    "colour_scheme": "light",
+    "motion_reduced": true,
+    "target_size_px": 64,
+    "captions_enabled": true,
+    "one_step_per_screen": true
+  },
+  "interaction": {
+    "switch_scanning": { "enabled": false, "switch_count": 2, "dwell_ms": 1200, "scan_mode": "row_column" },
+    "session_length_target_min": 4
+  },
+  "scoring_weights": {
+    "intelligibility": 0.35,
+    "pronunciation": 0.15,
+    "pace": 0.1,
+    "fluency": 0.1,
+    "confidence": 0.3
+  },
+  "goals": {
+    "job_context": "retail floor assistant",
+    "target_scenarios": ["first_day", "asking_for_help", "small_talk"]
+  },
+  "support": {
+    "guardian_managed": true,
+    "guardian_user_id": "usr_guardian_demo",
+    "trainer_user_id": "usr_trainer_demo",
+    "institution_id": "inst_demo"
+  },
+  "enrolment": { "phrases_completed": 0, "phrases_required": 30, "complete": false },
+  "created_at": "2026-07-31T08:00:00.000Z"
+}

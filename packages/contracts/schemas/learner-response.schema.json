@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "learner-response.schema.json",
+  "title": "LearnerResponse",
+  "description": "A learner's answer, normalised so that speaking, typing, signing, tapping symbols and switch-scanning all produce a comparable canonical_text (ADR-0002). One scoring engine, one scheduler, one recommender and one dashboard therefore serve every disability profile.",
+
+  "type": "object",
+  "required": ["session_id", "block_id", "input_mode", "canonical_text", "timing"],
+  "additionalProperties": false,
+
+  "properties": {
+    "session_id": { "type": "string", "minLength": 1 },
+    "block_id": { "type": "string", "minLength": 1 },
+
+    "input_mode": { "$ref": "common.schema.json#/$defs/InputMode" },
+
+    "canonical_text": {
+      "type": "string",
+      "description": "The normalised answer. Lowercased, punctuation-stripped, comparable across modalities. This is what downstream logic reads."
+    },
+
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How reliable canonical_text is. Speech and sign are lossy in ways typing is not. Below threshold we ask the learner to confirm - we NEVER score a low-confidence transcription as a wrong answer."
+    },
+
+    "raw": {
+      "type": "object",
+      "description": "Mode-specific payload. Only acoustic analytics (GOP, prosody, disfluency) read this, and only when input_mode is 'speech'.",
+      "additionalProperties": false,
+      "properties": {
+        "audio_ref": {
+          "type": "string",
+          "description": "Storage reference. Carries a TTL tag at write time; a scheduled job hard-deletes it within 24h unless research consent was given (Ethics E3)."
+        },
+        "asr_text": { "type": "string" },
+        "asr_model": { "type": "string" },
+        "symbol_sequence": {
+          "type": "array",
+          "items": { "type": ["integer", "string"] },
+          "description": "AAC symbol IDs in the order tapped."
+        },
+        "sign_predictions": {
+          "type": "array",
+          "description": "On-device sign classifier output. Only the labels reach the server - video never leaves the device (Ethics E4).",
+          "items": {
+            "type": "object",
+            "required": ["label", "confidence"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "typed_text": { "type": "string" },
+        "switch_path": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Scan selections made, for usability analysis of the scanning interface."
+        }
+      }
+    },
+
+    "timing": {
+      "type": "object",
+      "required": ["started_at", "submitted_at"],
+      "additionalProperties": false,
+      "properties": {
+        "started_at": { "type": "string", "format": "date-time" },
+        "submitted_at": { "type": "string", "format": "date-time" },
+        "attempts": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "description": "Recorded for analytics ONLY. Latency must never influence a score - that is Ethics E2 (excluded dimension 'response_latency') and E6 (no time pressure)."
+    },
+
+    "self_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "How confident the learner felt. Feeds the recommender; never feeds a score."
+        },
+        "difficulty_felt": { "type": "integer", "minimum": 1, "maximum": 5 }
+      }
+    },
+
+    "offline": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if captured without a network. Full analysis is queued and runs on reconnect; the learner is told so explicitly."
+    },
+
+    "cap_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Which Communication Ability Profile version this response was collected under. Progress data is only comparable within a CAP version."
+    }
+  }
+}

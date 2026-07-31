@@ -1,0 +1,21 @@
+{
+  "_comment": "Schema-VALID but accessibility-INVALID on purpose. The isl_clip satisfies A11Y-1, but there is no easy_read representation on a learner-facing phrase (violates A11Y-4, excluding P4), and it is flagged requires_vision with no audio track (violates A11Y-2, excluding P1).",
+  "id": "phrase.meeting.add_point_01",
+  "kind": "phrase",
+  "canonical_text": "Can I add one point?",
+  "intent": "request_turn",
+  "difficulty": 3,
+  "representations": {
+    "isl_clip": { "uri": "content/isl/add_point_01.mp4", "gloss": "ONE POINT ADD CAN-I" },
+    "caption": "Can I add one point?"
+  },
+  "interaction": {
+    "accepted_input_modes": ["speech", "text", "aac"]
+  },
+  "a11y": {
+    "requires_audio": false,
+    "requires_vision": true,
+    "requires_speech": false
+  },
+  "version": 1
+}

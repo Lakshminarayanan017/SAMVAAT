@@ -1,0 +1,29 @@
+{
+  "name": "@samvaad/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The data contracts every part of SAMVAAD depends on. JSON Schema is the single source of truth; TypeScript types and Pydantic models are generated from it.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas/*": "./schemas/*"
+  },
+  "scripts": {
+    "build": "node scripts/generate-typescript.mjs && node scripts/generate-python.mjs",
+    "validate": "node scripts/validate.mjs",
+    "check": "node scripts/check-drift.mjs",
+    "test": "node scripts/validate.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "json-schema-to-typescript": "^15.0.3",
+    "typescript": "^5.6.3"
+  }
+}
