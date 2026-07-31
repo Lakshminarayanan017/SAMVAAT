@@ -104,6 +104,34 @@ jobs:
         run: |
           python -m eval.harness --set atypical >> "$GITHUB_STEP_SUMMARY"
 
+  web:
+    name: web · lint, typecheck, tests and build
+    runs-on: ubuntu-latest
+    needs: contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      # The web app imports the generated types, so they must exist first.
+      - run: npm run contracts:build
+
+      - run: npm run lint -w @samvaad/web
+
+      - run: npm run typecheck -w @samvaad/web
+
+      # Includes the Modality Router proof (one block, five channels, five
+      # personas), the contrast conformance suite across all four themes, and
+      # the boundary self-test that proves the router cannot be bypassed.
+      - run: npm run test -w @samvaad/web
+
+      - run: npm run build -w @samvaad/web
+
   # ── Ethics Charter enforcement ──────────────────────────────────────────────
   # Rules that are cheap to check statically. The rest are enforced by the tests
   # named beside each rule in docs/ETHICS_CHARTER.md.
