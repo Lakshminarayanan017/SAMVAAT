@@ -36,7 +36,12 @@ function pyType(schema, hint) {
     emitDef(name, def);
     return name;
   }
-  if (Array.isArray(schema.enum)) return 'str';
+  // Inline enums become Literal[...] so Python enforces the same members the
+  // JSON Schema does. Never assume `str` here - `{"type":"integer","enum":[1,2]}`
+  // is a real shape in our schemas.
+  if (Array.isArray(schema.enum)) {
+    return `Literal[${schema.enum.map((v) => JSON.stringify(v)).join(', ')}]`;
+  }
   if (Array.isArray(schema.type)) {
     const inner = schema.type.filter((t) => t !== 'null').map((t) => PRIMITIVES[t] ?? 'Any');
     const u = inner.length > 1 ? `Union[${inner.join(', ')}]` : inner[0];
@@ -61,7 +66,9 @@ function fieldArgs(schema, required) {
   if (schema.maximum !== undefined) args.push(`le=${schema.maximum}`);
   if (schema.minLength !== undefined) args.push(`min_length=${schema.minLength}`);
   if (schema.minItems !== undefined) args.push(`min_length=${schema.minItems}`);
-  if (schema.pattern !== undefined) args.push(`pattern=r${JSON.stringify(schema.pattern)}`);
+  // Deliberately NOT a Python raw string: JSON.stringify already escapes
+  // backslashes, and r"\\." would match a literal backslash rather than a dot.
+  if (schema.pattern !== undefined) args.push(`pattern=${JSON.stringify(schema.pattern)}`);
   return args.join(', ');
 }
 
@@ -126,7 +133,7 @@ Regenerate with: npm run contracts:build
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 

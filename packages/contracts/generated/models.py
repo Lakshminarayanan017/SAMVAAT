@@ -8,7 +8,7 @@ Regenerate with: npm run contracts:build
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -43,7 +43,7 @@ class Pictograph(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    set: str = Field(...)
+    set: Literal["arasaac", "mulberry"] = Field(...)
     id: Union[int, str] = Field(...)
     label: str = Field(..., min_length=1)
     uri: Optional[str] = Field(None)
@@ -76,7 +76,7 @@ class InputMode(str, Enum):
 class ContentBlockInteractionTargetResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    type: Optional[str] = Field(None)
+    type: Optional[Literal["phrase_match", "intent_match", "free_form", "choice"]] = Field(None)
     ref: Optional[str] = Field(None)
     choices: Optional[list[str]] = Field(None)
 
@@ -107,8 +107,8 @@ class ContentBlock(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    id: str = Field(..., description="Stable dotted identifier, e.g. 'phrase.clarify.repeat_request_01'. Never reused, never renamed - progress data references it.", pattern=r"^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$")
-    kind: str = Field(...)
+    id: str = Field(..., description="Stable dotted identifier, e.g. 'phrase.clarify.repeat_request_01'. Never reused, never renamed - progress data references it.", pattern="^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$")
+    kind: Literal["phrase", "scenario_turn", "social_story_panel", "interview_question", "instruction"] = Field(...)
     canonical_text: str = Field(..., description="The meaning, in plain standard English. This is the reference for scoring, never the thing rendered verbatim to every learner.", min_length=1)
     intent: str = Field(..., description="The communicative function, e.g. 'request_clarification'. Drives scenario matching and the error signature used by the recommender.", min_length=1)
     difficulty: Difficulty = Field(...)
@@ -117,7 +117,7 @@ class ContentBlock(BaseModel):
     interaction: ContentBlockInteraction = Field(...)
     a11y: ContentBlockA11y = Field(..., description="Asserted in CI. No ContentBlock may require a channel that a supported profile lacks unless an equivalent representation exists. This is the automated guarantee behind 'accessibility as architecture'.")
     version: int = Field(..., ge=1)
-    source: Optional[str] = Field("authored", description="'generated' content is labelled as AI-generated to the learner until a trainer reviews it (Ethics E5).")
+    source: Optional[Literal["authored", "generated", "generated_reviewed"]] = Field("authored", description="'generated' content is labelled as AI-generated to the learner until a trainer reviews it (Ethics E5).")
 
 
 class LearnerResponseRawSignPredictions(BaseModel):
@@ -205,8 +205,8 @@ class CommunicationAbilityProfilePresentation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     audio_rate: Optional[float] = Field(1, description="Playback rate for narrated audio. Below 1.0 uses the recorded slow track where available.", ge=0.5, le=1.5)
-    contrast_theme: Optional[str] = Field("standard")
-    colour_scheme: Optional[str] = Field("system")
+    contrast_theme: Optional[Literal["standard", "high_contrast"]] = Field("standard")
+    colour_scheme: Optional[Literal["light", "dark", "system"]] = Field("system")
     motion_reduced: Optional[bool] = Field(False)
     target_size_px: Optional[int] = Field(44, description="Minimum interactive target size. 44 is the WCAG 2.2 AA floor; motor-impaired profiles raise it.", ge=44, le=88)
     captions_enabled: Optional[bool] = Field(True)
@@ -217,9 +217,9 @@ class CommunicationAbilityProfileInteractionSwitchScanning(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: Optional[bool] = Field(False)
-    switch_count: Optional[str] = Field(2)
+    switch_count: Optional[Literal[1, 2]] = Field(2)
     dwell_ms: Optional[int] = Field(1200, ge=300, le=5000)
-    scan_mode: Optional[str] = Field("row_column")
+    scan_mode: Optional[Literal["linear", "row_column"]] = Field("row_column")
 
 
 class CommunicationAbilityProfileInteraction(BaseModel):
@@ -279,7 +279,7 @@ class CommunicationAbilityProfile(BaseModel):
     output_channels: list[OutputChannel] = Field(..., description="What the learner can use to receive. Ordered by preference; index 0 is the primary channel and the rest render simultaneously as support.", min_length=1)
     text_complexity: TextComplexity = Field(...)
     speech_status: SpeechStatus = Field(...)
-    primary_language: Optional[str] = Field("en-IN")
+    primary_language: Optional[Literal["en-IN", "ta-IN", "hi-IN"]] = Field("en-IN")
     presentation: Optional[CommunicationAbilityProfilePresentation] = Field(None)
     interaction: Optional[CommunicationAbilityProfileInteraction] = Field(None)
     scoring_weights: Optional[CommunicationAbilityProfileScoringWeights] = Field(None, description="Per-dimension weights for the composite Personal Progress Index (ADR-0003). Visible to the learner and the trainer - never hidden. A profile with a stammer down-weights fluency and up-weights intelligibility.")
