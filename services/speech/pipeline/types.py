@@ -47,6 +47,10 @@ class Transcript:
     confidence: float
     model: str
     language: str = "en"
+    #: The per-learner adapter that produced this, if any (M8). Recorded so a
+    #: transcript stays interpretable after an adapter is retrained, and so the
+    #: "the app understands you better now" comparison has something to point at.
+    adapter: str | None = None
 
 
 @dataclass(frozen=True)
@@ -112,11 +116,31 @@ class PronunciationScore:
 
 @dataclass(frozen=True)
 class AnalysisResult:
-    """Everything the pipeline produced for one attempt."""
+    """Everything the pipeline produced for one attempt.
+
+    The only field a learner ever sees is `ppi`. Everything above it is an
+    internal signal: transcripts are for the practice loop to compare against,
+    GOP is a fairness hazard in raw form (see `gop.py`), and prosody is a set of
+    physical measurements with no meaning until it is compared to the learner's
+    own baseline. Adding a code path that renders any of the rest to a learner
+    would breach Ethics E1.
+    """
 
     transcript: Transcript | None = None
     alignment: Alignment | None = None
     pronunciation: PronunciationScore | None = None
+    #: Physical measurements of the utterance. Typed loosely so `types.py`
+    #: stays import-free — the concrete type is `prosody.ProsodyFeatures`.
+    prosody: object | None = None
+    #: Detected events, each already carrying its coaching cue. Never a count of
+    #: mistakes; `disfluency.DisfluencyEvent`.
+    disfluency_events: tuple = ()
+    #: The learner-facing result. `ppi.PpiResult`.
+    ppi: object | None = None
+    #: Baselines after folding this attempt in, for the API to persist. The
+    #: speech service holds no learner state of its own — the API gateway is the
+    #: only thing that talks to the database (ADR-0004).
+    updated_baselines: object | None = None
     #: Stage name -> why it did not run. Surfaced so the client can degrade
     #: honestly rather than showing a learner an empty result.
     skipped: dict[str, str] = field(default_factory=dict)

@@ -106,9 +106,13 @@ class EvalReport:
 
         if not self.per_speaker:
             lines += [
-                "_No results: no pipeline stages are implemented yet._",
+                "_No per-speaker results: this evaluation set has no licensed corpus "
+                "cached on this host. See docs/TRAINING_HANDOFF.md for dataset access._",
                 "",
-                "Targets this harness will enforce once they land:",
+                "_The fairness gates below do not need a corpus — they are properties "
+                "of the scoring maths — and they run on every build._",
+                "",
+                "Targets this harness enforces once a corpus is present:",
                 "",
                 "| Module | Metric | Bar |",
                 "|---|---|---|",
@@ -145,6 +149,103 @@ EVAL_SETS: dict[str, Callable[[], list[SpeakerResult]]] = {
 }
 
 
+# ── Fairness gates ───────────────────────────────────────────────────────────
+#
+# These run without any dataset at all, because they are properties of the
+# scoring maths rather than of a corpus. That is what makes them CI gates from
+# day one instead of promises deferred until the data arrives — and the two
+# properties they check are the entire ethical claim of the product.
+
+
+@dataclass(frozen=True)
+class GateResult:
+    name: str
+    passed: bool
+    detail: str
+
+
+def _ppi_trajectory(values: list[float]) -> list[int]:
+    """Score a sequence of attempts exactly as the runner does."""
+    from pipeline.ppi import Baseline, Dimension, compute, update_baselines
+
+    baselines: dict[Dimension, Baseline] = {}
+    scored: list[int] = []
+
+    for value in values:
+        raw = {Dimension.FLUENCY: value}
+        composite = compute(raw, baselines).composite
+        if composite is not None:
+            scored.append(composite)
+        baselines = update_baselines(raw, baselines)
+
+    return scored
+
+
+def gate_monotonicity() -> GateResult:
+    """A learner who improves must see their index rise."""
+    scored = _ppi_trajectory([50.0 + step * 0.8 for step in range(45)])
+
+    third = max(1, len(scored) // 3)
+    early = sum(scored[:third]) / third
+    late = sum(scored[-third:]) / third
+
+    return GateResult(
+        name="ppi_monotonicity",
+        passed=late > early,
+        detail=f"first third {early:.1f} -> last third {late:.1f}",
+    )
+
+
+def gate_disfluency_invariance() -> GateResult:
+    """Identical improvement, one speaker with a constant disfluency offset.
+
+    The trajectories must be indistinguishable. This is the proof of ADR-0003:
+    a constant characteristic of a learner's speech is absorbed into their own
+    baseline and cancels out of the score.
+    """
+    import random
+
+    rng = random.Random(20260731)
+    improvement = [55.0 + step * 0.5 for step in range(60)]
+
+    fluent = _ppi_trajectory([value + rng.gauss(0, 3) for value in improvement])
+    stammering = _ppi_trajectory([value - 25.0 + rng.gauss(0, 3) for value in improvement])
+
+    mean_fluent = sum(fluent) / len(fluent)
+    mean_stammering = sum(stammering) / len(stammering)
+    difference = abs(mean_fluent - mean_stammering)
+
+    return GateResult(
+        name="ppi_disfluency_invariance",
+        passed=difference < 2.0,
+        detail=(
+            f"mean index {mean_fluent:.2f} vs {mean_stammering:.2f} "
+            f"(difference {difference:.2f}, bar < 2.00) against a 25-point raw offset"
+        ),
+    )
+
+
+GATES: list[Callable[[], GateResult]] = [gate_monotonicity, gate_disfluency_invariance]
+
+
+def run_gates() -> list[GateResult]:
+    return [gate() for gate in GATES]
+
+
+def render_gates(results: list[GateResult]) -> str:
+    lines = [
+        "### Fairness gates",
+        "",
+        "| Gate | Result | Detail |",
+        "|---|---|---|",
+    ]
+    for result in results:
+        lines.append(
+            f"| `{result.name}` | {'PASS' if result.passed else 'FAIL'} | {result.detail} |"
+        )
+    return "\n".join(lines)
+
+
 def run(eval_set: str) -> EvalReport:
     if eval_set not in EVAL_SETS:
         raise SystemExit(f"unknown eval set '{eval_set}'; choose from {sorted(EVAL_SETS)}")
@@ -162,18 +263,33 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--set", default="atypical", choices=sorted(EVAL_SETS))
     parser.add_argument("--json", action="store_true", help="machine-readable output for CI")
+    parser.add_argument(
+        "--gates",
+        action="store_true",
+        help="run the fairness gates and exit non-zero if any fails",
+    )
     args = parser.parse_args()
 
     report = run(args.set)
+    gates = run_gates()
 
     if args.json:
         print(json.dumps({
             "eval_set": report.eval_set,
             "model_versions": report.model_versions,
             "per_speaker": [vars(s) for s in report.per_speaker],
+            "gates": [vars(gate) for gate in gates],
         }, indent=2))
     else:
         print(report.render())
+        print()
+        print(render_gates(gates))
+
+    # Only --gates makes failure fatal. The eval table is informational until a
+    # dataset is licensed; the fairness gates are properties of our own maths
+    # and are enforceable today, so CI runs them with --gates.
+    if args.gates and not all(gate.passed for gate in gates):
+        return 1
 
     return 0
 
