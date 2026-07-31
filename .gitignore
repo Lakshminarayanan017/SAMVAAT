@@ -1,0 +1,52 @@
+# ── dependencies ──────────────────────────────────────────────
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ── build output ──────────────────────────────────────────────
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# ── environment & secrets ─────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── ml artefacts (tracked in the model registry, not in git) ──
+services/speech/artifacts/
+services/speech/data/
+mlruns/
+*.onnx
+*.pt
+*.ckpt
+*.safetensors
+
+# ── generated media (produced by the content build) ───────────
+packages/content/dist/
+packages/content/assets/generated/
+
+# ── local tooling ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+coverage/
+playwright-report/
+test-results/
+.claude/
+
+# ── source material (kept out of the code repo) ───────────────
+*.pptx
+*.key.pdf

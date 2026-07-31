@@ -1,0 +1,26 @@
+{
+  "name": "samvaad",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SAMVAAD — An Ability-Adaptive Multimodal AI Coach for Workplace Communication & Employability",
+  "workspaces": [
+    "packages/*",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "contracts:build": "npm run build -w @samvaad/contracts",
+    "contracts:validate": "npm run validate -w @samvaad/contracts",
+    "contracts:check": "npm run check -w @samvaad/contracts",
+    "dev:web": "npm run dev -w @samvaad/web",
+    "build:web": "npm run build -w @samvaad/web",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
