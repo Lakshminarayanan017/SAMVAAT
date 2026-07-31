@@ -1,0 +1,44 @@
+Problem Statement
+    Persons with disabilities (PwDs) often face significant barriers in acquiring workplace communication skills 
+    due to limited access to inclusive training platforms. Traditional communication training programs are 
+    generally designed for the broader population and do not adequately address the diverse accessibility 
+    needs of individuals with visual, hearing, speech, cognitive, or learning disabilities.
+
+Development Guidelines
+    Develop an AI-assisted workplace communication training application that provides an 
+    accessible, personalized, and interactive learning environment for persons with disabilities. 
+    The application should leverage Generative AI, Natural Language Processing (NLP), 
+    Speech Technologies, and Assistive AI to simulate real-world workplace communication scenarios, 
+    evaluate users' communication skills, and provide adaptive feedback tailored to their 
+    individual abilities and learning needs.
+
+    Features
+    •
+    Database of approximately 200 workplace communication words and phrases
+    •
+    Speech, pronunciation, and fluency analysis
+    •
+    AI-assisted contextual learning
+    •
+    Social stories for workplace adaptation
+    •
+    Interactive simulations of workplace communication scenarios
+    •
+    Personalized learning recommendations
+    •
+    Mock interview and HR interaction simulator
+    •
+    Gamified learning modules with badges and achievements
+    •
+    Progress dashboard for learners, trainers, and institutions
+    Expected Solution
+    ✓
+    Improve workplace communication skills among persons with disabilities
+    ✓
+    Enhance confidence during interviews and workplace interactions
+    ✓
+    Increase employability and workplace readiness
+    ✓
+    Provide inclusive, accessible, and personalized AI-based communication training
+    ✓
+    Enable institutions and employers to monitor communication competency through analytics
