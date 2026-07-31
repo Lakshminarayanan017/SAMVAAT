@@ -1,0 +1,25 @@
+{
+  "slug": "progress",
+  "title": "Reporting progress",
+  "target": 18,
+  "entries": [
+    {"id": "finished_task_01", "text": "I have finished the first batch.", "intent": "report_completion", "difficulty": 2, "easy_read": "My work is done.\nI tell my boss.", "symbols": ["finish", "work", "tell"]},
+    {"id": "still_working_01", "text": "I am still working on it.", "intent": "report_status", "difficulty": 1, "easy_read": "My work is not done.\nI am still doing it.", "symbols": ["work", "not", "finish"]},
+    {"id": "half_done_01", "text": "I have done about half so far.", "intent": "report_status", "difficulty": 2, "easy_read": "Some work is done.\nSome work is left.", "symbols": ["work", "finish", "more"]},
+    {"id": "running_late_01", "text": "I am running about an hour behind.", "intent": "report_delay", "difficulty": 3, "easy_read": "My work is slow today.\nI need one more hour.", "symbols": ["late", "time", "work"], "errors": ["hiding the delay until the deadline"]},
+    {"id": "will_finish_by_01", "text": "I will finish it by four o'clock.", "intent": "report_status", "difficulty": 2, "easy_read": "I say when I will finish.\nI will be done at four.", "symbols": ["finish", "time", "say"]},
+    {"id": "ready_for_next_01", "text": "I have finished. What should I do next?", "intent": "request_task", "difficulty": 2, "easy_read": "My work is done.\nI ask for new work.", "symbols": ["finish", "ask", "job"]},
+    {"id": "task_blocked_01", "text": "I cannot continue because the machine has stopped.", "intent": "report_blocker", "difficulty": 3, "easy_read": "The machine is not working.\nI cannot do my work.", "symbols": ["machine", "not", "work"], "tags": ["warehouse"]},
+    {"id": "need_more_stock_01", "text": "I have run out of boxes.", "intent": "report_blocker", "difficulty": 2, "easy_read": "There are no boxes left.\nI need more boxes.", "symbols": ["box", "not", "need"], "tags": ["warehouse"]},
+    {"id": "daily_count_01", "text": "I completed forty orders today.", "intent": "report_completion", "difficulty": 2, "easy_read": "I say how much I did.\nI did forty orders today.", "symbols": ["order", "finish", "today"]},
+    {"id": "found_problem_01", "text": "I found a problem with this order.", "intent": "report_problem", "difficulty": 2, "easy_read": "Something is wrong.\nI tell my boss.", "symbols": ["problem", "order", "tell"]},
+    {"id": "double_checked_01", "text": "I have checked it twice and it is correct.", "intent": "report_completion", "difficulty": 3, "easy_read": "I looked at it two times.\nIt is right.", "symbols": ["check", "good"]},
+    {"id": "need_more_time_01", "text": "I need a little more time to finish this properly.", "intent": "request_time", "difficulty": 3, "easy_read": "I want to do it well.\nPlease give me more time.", "symbols": ["time", "more", "finish"]},
+    {"id": "handover_status_01", "text": "I have finished trays one to ten. Trays eleven onward are left.", "intent": "report_status", "difficulty": 4, "easy_read": "I did the first ten.\nThe rest are not done.\nThe next person can start there.", "symbols": ["finish", "shift", "work"], "tags": ["warehouse", "handover"]},
+    {"id": "ahead_of_schedule_01", "text": "I am ahead of schedule today.", "intent": "report_status", "difficulty": 3, "easy_read": "My work is going fast.\nI am doing well today.", "symbols": ["work", "good", "time"]},
+    {"id": "waiting_on_someone_01", "text": "I am waiting for approval before I can continue.", "intent": "report_blocker", "difficulty": 3, "easy_read": "I need a yes from my boss.\nThen I can work again.", "symbols": ["wait", "manager", "work"]},
+    {"id": "redo_needed_01", "text": "I made a mistake and I am redoing that part.", "intent": "report_problem", "difficulty": 3, "easy_read": "I did something wrong.\nI am doing it again.", "symbols": ["mistake", "again", "work"], "errors": ["hiding the mistake"]},
+    {"id": "confirm_delivered_01", "text": "The delivery has been sent out.", "intent": "report_completion", "difficulty": 2, "easy_read": "The boxes have gone.\nThe work is done.", "symbols": ["box", "go", "finish"]},
+    {"id": "weekly_summary_01", "text": "This week I completed all my tasks and helped train a new joiner.", "intent": "report_completion", "difficulty": 4, "easy_read": "I did all my work this week.\nI also helped a new person.", "symbols": ["week", "work", "help"]}
+  ]
+}

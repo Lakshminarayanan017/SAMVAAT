@@ -1,0 +1,21 @@
+{
+  "slug": "feedback",
+  "title": "Giving & receiving feedback",
+  "target": 14,
+  "entries": [
+    {"id": "thank_for_feedback_01", "text": "Thank you. I will work on that.", "intent": "receive_feedback", "difficulty": 2, "easy_read": "You told me how to do better.\nI say thank you.\nI will try.", "symbols": ["thank you", "work", "learn"], "distractors": ["That's not fair.", "I already did that."], "errors": ["defending instead of listening"]},
+    {"id": "ask_what_to_improve_01", "text": "What could I do better next time?", "intent": "request_feedback", "difficulty": 3, "easy_read": "I want to do better.\nI ask what to change.", "symbols": ["ask", "good", "learn"]},
+    {"id": "ask_for_example_01", "text": "Could you give me an example, please?", "intent": "request_feedback", "difficulty": 3, "easy_read": "I do not understand yet.\nPlease show me one time it happened.", "symbols": ["show", "please", "understand"]},
+    {"id": "accept_correction_01", "text": "You are right. I will fix it now.", "intent": "receive_feedback", "difficulty": 2, "easy_read": "I made a mistake.\nI will fix it now.", "symbols": ["mistake", "fix", "now"]},
+    {"id": "need_time_to_think_01", "text": "Thank you for telling me. May I think about it and come back?", "intent": "receive_feedback", "difficulty": 4, "easy_read": "I heard what you said.\nI want to think first.\nThen we can talk again.", "symbols": ["think", "time", "thank you"]},
+    {"id": "praise_colleague_01", "text": "You did that very well. Thank you.", "intent": "give_feedback", "difficulty": 2, "easy_read": "Your work was good.\nI say thank you.", "symbols": ["good", "work", "thank you"]},
+    {"id": "gentle_correction_01", "text": "One small thing: the labels go on the top of the box.", "intent": "give_feedback", "difficulty": 3, "easy_read": "I show you one small change.\nPut the label on top.", "symbols": ["box", "show", "fix"], "tags": ["warehouse"]},
+    {"id": "ask_check_work_01", "text": "Could you check my work and tell me if it is right?", "intent": "request_feedback", "difficulty": 3, "easy_read": "Please look at my work.\nTell me if it is good.", "symbols": ["check", "work", "please"]},
+    {"id": "disagree_with_feedback_01", "text": "I understand. May I explain what happened from my side?", "intent": "receive_feedback", "difficulty": 5, "easy_read": "I heard you.\nI want to tell my side too.\nCan I explain?", "symbols": ["understand", "explain", "ask"], "hints": ["Listen first", "Do not argue", "Ask before explaining"]},
+    {"id": "confirm_improvement_01", "text": "I have changed the way I do it, as you suggested.", "intent": "report_status", "difficulty": 4, "easy_read": "You told me to change.\nI changed it.", "symbols": ["fix", "work", "tell"]},
+    {"id": "ask_for_review_01", "text": "Could we look at my progress at the end of the month?", "intent": "request_feedback", "difficulty": 4, "easy_read": "I want to know how I am doing.\nCan we talk at month end?", "symbols": ["check", "work", "ask"]},
+    {"id": "acknowledge_praise_01", "text": "Thank you. I enjoyed working on it.", "intent": "receive_feedback", "difficulty": 2, "easy_read": "You said my work was good.\nI say thank you.", "symbols": ["thank you", "happy", "work"]},
+    {"id": "feedback_on_process_01", "text": "May I suggest a small change that would save time?", "intent": "give_feedback", "difficulty": 4, "easy_read": "I have an idea.\nIt can save time.\nCan I tell you?", "symbols": ["think", "time", "ask"]},
+    {"id": "own_the_mistake_01", "text": "That was my mistake. I am sorry, and here is how I will avoid it.", "intent": "receive_feedback", "difficulty": 5, "easy_read": "I did it wrong.\nI say sorry.\nI say how I will do better.", "symbols": ["mistake", "sorry", "fix"]}
+  ]
+}

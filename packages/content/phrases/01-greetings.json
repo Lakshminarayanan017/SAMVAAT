@@ -1,0 +1,25 @@
+{
+  "slug": "greetings",
+  "title": "Greetings & introductions",
+  "target": 18,
+  "entries": [
+    {"id": "good_morning_01", "text": "Good morning.", "intent": "greeting", "difficulty": 1, "easy_read": "It is morning.\nI say hello.", "symbols": ["hello", "morning"], "distractors": ["Morning!", "Hey.", "What's up."]},
+    {"id": "good_afternoon_01", "text": "Good afternoon.", "intent": "greeting", "difficulty": 1, "easy_read": "It is after lunch.\nI say hello.", "symbols": ["hello", "afternoon"]},
+    {"id": "self_intro_name_01", "text": "My name is Ravi.", "intent": "self_introduction", "difficulty": 1, "easy_read": "I say my name.", "symbols": ["i", "say"], "errors": ["saying only the name with no sentence"]},
+    {"id": "self_intro_team_01", "text": "I am from the packaging team.", "intent": "self_introduction", "difficulty": 2, "easy_read": "I say my team.\nMy team is packaging.", "symbols": ["i", "team", "work"]},
+    {"id": "self_intro_full_01", "text": "Good morning, I am Ravi from the packaging team.", "intent": "self_introduction", "difficulty": 2, "easy_read": "I say hello.\nI say my name.\nI say my team.", "symbols": ["hello", "i", "team"], "hints": ["Say hello first", "Then your name", "Then your team"]},
+    {"id": "nice_to_meet_01", "text": "It is nice to meet you.", "intent": "greeting", "difficulty": 2, "easy_read": "I am glad to meet you.\nI say it politely.", "symbols": ["happy", "you"]},
+    {"id": "first_day_01", "text": "Today is my first day.", "intent": "self_introduction", "difficulty": 2, "easy_read": "This is my first day here.\nI tell people.", "symbols": ["today", "job", "start"]},
+    {"id": "ask_name_01", "text": "May I know your name, please?", "intent": "request_information", "difficulty": 2, "easy_read": "I want to know your name.\nI ask politely.", "symbols": ["ask", "you", "please"], "errors": ["dropping please", "saying 'what is your name' abruptly"]},
+    {"id": "greet_manager_01", "text": "Good morning, sir. I am ready to start.", "intent": "greeting", "difficulty": 2, "easy_read": "I say hello to my boss.\nI say I am ready.", "symbols": ["hello", "manager", "ready"], "tags": ["supervisor"]},
+    {"id": "greet_return_01", "text": "Good morning. How are you today?", "intent": "greeting", "difficulty": 2, "easy_read": "I say hello.\nI ask how you are.", "symbols": ["hello", "ask", "you"]},
+    {"id": "respond_how_are_you_01", "text": "I am well, thank you. And you?", "intent": "greeting_response", "difficulty": 2, "easy_read": "I am fine.\nI say thank you.\nI ask about you.", "symbols": ["good", "thank you", "you"]},
+    {"id": "introduce_colleague_01", "text": "This is Meena. She works with me.", "intent": "introduce_third_party", "difficulty": 3, "easy_read": "I show my friend.\nI say her name.\nWe work together.", "symbols": ["colleague", "work", "say"]},
+    {"id": "greet_customer_01", "text": "Good morning. How can I help you?", "intent": "offer_help", "difficulty": 2, "easy_read": "I say hello to the customer.\nI ask what they need.", "symbols": ["hello", "customer", "help"], "tags": ["retail"]},
+    {"id": "goodbye_end_shift_01", "text": "I am leaving now. See you tomorrow.", "intent": "farewell", "difficulty": 2, "easy_read": "My work is done.\nI say goodbye.\nI will come tomorrow.", "symbols": ["goodbye", "finish", "tomorrow"]},
+    {"id": "goodbye_polite_01", "text": "Have a good evening.", "intent": "farewell", "difficulty": 1, "easy_read": "I say goodbye.\nI wish you well.", "symbols": ["goodbye", "evening", "good"]},
+    {"id": "greet_after_absence_01", "text": "I am back. Thank you for covering my work.", "intent": "greeting", "difficulty": 3, "easy_read": "I was away.\nNow I am back.\nI say thank you.", "symbols": ["come", "thank you", "work"]},
+    {"id": "greet_new_joiner_01", "text": "Welcome to the team. Please ask me if you need anything.", "intent": "offer_help", "difficulty": 3, "easy_read": "You are new here.\nI say welcome.\nYou can ask me.", "symbols": ["welcome", "team", "ask"]},
+    {"id": "greet_shift_handover_01", "text": "I am taking over from the morning shift.", "intent": "self_introduction", "difficulty": 3, "easy_read": "The morning workers are going.\nNow I start my work.", "symbols": ["shift", "start", "work"], "tags": ["warehouse"]}
+  ]
+}

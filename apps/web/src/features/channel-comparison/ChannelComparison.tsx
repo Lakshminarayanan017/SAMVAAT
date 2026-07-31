@@ -31,10 +31,13 @@ const CHANNELS: { channel: OutputChannel; label: string; serves: string }[] = [
   { channel: 'isl', label: 'Indian Sign Language', serves: 'P2' },
 ];
 
-export function ChannelComparison({ block }: { block: ContentBlock }) {
+export function ChannelComparison({ blocks }: { blocks: ContentBlock[] }) {
   const [personaId, setPersonaId] = useState<string>(PERSONAS[0]!.id);
+  const [blockId, setBlockId] = useState<string>(blocks[0]!.id);
   const [lastResponse, setLastResponse] = useState<LearnerResponse | null>(null);
+
   const persona = PERSONAS.find((p) => p.id === personaId) ?? PERSONAS[0]!;
+  const block = blocks.find((b) => b.id === blockId) ?? blocks[0]!;
 
   return (
     <main
@@ -51,6 +54,7 @@ export function ChannelComparison({ block }: { block: ContentBlock }) {
         can actually use.
       </p>
 
+      <PhrasePicker blocks={blocks} selected={blockId} onSelect={setBlockId} />
       <PersonaSwitcher selected={personaId} onSelect={setPersonaId} />
 
       <section aria-labelledby="as-rendered" style={{ marginTop: 'var(--space-xl, 2.5rem)' }}>
@@ -149,6 +153,60 @@ export function ChannelComparison({ block }: { block: ContentBlock }) {
         </pre>
       </section>
     </main>
+  );
+}
+
+function PhrasePicker({
+  blocks,
+  selected,
+  onSelect,
+}: {
+  blocks: ContentBlock[];
+  selected: string;
+  onSelect: (id: string) => void;
+}) {
+  // Grouped by the category tag the content build stamps on every block, so the
+  // 226-phrase bank is navigable rather than one flat list.
+  const groups = new Map<string, ContentBlock[]>();
+  for (const block of blocks) {
+    const category = block.scenario_tags?.[0] ?? 'other';
+    groups.set(category, [...(groups.get(category) ?? []), block]);
+  }
+
+  return (
+    <p style={{ marginTop: 'var(--space-lg, 1.5rem)' }}>
+      <label htmlFor="phrase" style={{ display: 'block', fontWeight: 700, marginBottom: '0.5rem' }}>
+        Phrase <span style={{ fontWeight: 400, color: 'var(--colour-fg-muted)' }}>
+          ({blocks.length} in the Workplace Language Bank)
+        </span>
+      </label>
+      <select
+        id="phrase"
+        value={selected}
+        onChange={(event) => onSelect(event.target.value)}
+        style={{
+          font: 'inherit',
+          minHeight: 'var(--target-min, 44px)',
+          width: '100%',
+          maxWidth: '44rem',
+          padding: 'var(--space-sm, 0.5rem)',
+          color: 'var(--colour-fg)',
+          background: 'var(--colour-bg)',
+          border: '1px solid var(--colour-border)',
+          borderRadius: 'var(--radius-md, 8px)',
+        }}
+      >
+        {[...groups.entries()].map(([category, items]) => (
+          <optgroup key={category} label={category.replace(/_/g, ' ')}>
+            {items.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.canonical_text}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+    </p>
   );
 }
 

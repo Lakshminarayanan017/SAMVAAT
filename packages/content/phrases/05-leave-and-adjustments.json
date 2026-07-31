@@ -1,0 +1,25 @@
+{
+  "slug": "leave_and_adjustments",
+  "title": "Leave & workplace adjustments",
+  "target": 18,
+  "entries": [
+    {"id": "request_leave_01", "text": "May I take leave on Friday, please?", "intent": "request_leave", "difficulty": 2, "easy_read": "I want a day off.\nI ask for Friday.", "symbols": ["leave", "friday", "ask"], "distractors": ["I'm not coming Friday.", "I need Friday off."]},
+    {"id": "leave_reason_01", "text": "I have a medical appointment on Tuesday morning.", "intent": "request_leave", "difficulty": 3, "easy_read": "I must see the doctor.\nIt is Tuesday morning.", "symbols": ["morning", "leave"]},
+    {"id": "leave_advance_notice_01", "text": "I wanted to tell you early so you can plan the shift.", "intent": "request_leave", "difficulty": 4, "easy_read": "I tell you now, not later.\nThen you can plan the work.", "symbols": ["tell", "early", "shift"]},
+    {"id": "sick_today_01", "text": "I am unwell today and cannot come to work.", "intent": "report_absence", "difficulty": 2, "easy_read": "I am not well.\nI cannot work today.", "symbols": ["sad", "not", "work"]},
+    {"id": "will_be_late_01", "text": "I am sorry, I will be about twenty minutes late.", "intent": "report_absence", "difficulty": 3, "easy_read": "I will come late today.\nI say sorry.", "symbols": ["late", "sorry", "time"]},
+    {"id": "half_day_01", "text": "Could I leave two hours early today?", "intent": "request_leave", "difficulty": 3, "easy_read": "I want to go home early.\nI ask my boss first.", "symbols": ["leave", "early", "ask"]},
+    {"id": "written_instructions_adj_01", "text": "It helps me if instructions are written down.", "intent": "request_adjustment", "difficulty": 3, "easy_read": "Written words help me.\nPlease write my work steps.", "symbols": ["written", "instruction", "help"], "tags": ["accommodation"], "hints": ["Say what helps you", "Say it calmly, as a fact"]},
+    {"id": "quiet_space_adj_01", "text": "A quieter place to work would help me concentrate.", "intent": "request_adjustment", "difficulty": 4, "easy_read": "Noise makes my work hard.\nA quiet place helps me.", "symbols": ["quiet", "work", "help"], "tags": ["accommodation"]},
+    {"id": "extra_time_adj_01", "text": "I work carefully, so I may need a little extra time.", "intent": "request_adjustment", "difficulty": 4, "easy_read": "I do good work.\nI need more time to do it.", "symbols": ["careful", "time", "work"], "tags": ["accommodation"]},
+    {"id": "seated_work_adj_01", "text": "Could I do this task sitting down?", "intent": "request_adjustment", "difficulty": 3, "easy_read": "Standing is hard for me.\nCan I sit and work?", "symbols": ["task", "rest", "ask"], "tags": ["accommodation"]},
+    {"id": "regular_breaks_adj_01", "text": "Short regular breaks help me keep my work steady.", "intent": "request_adjustment", "difficulty": 4, "easy_read": "I need small rests.\nThen my work stays good.", "symbols": ["break", "rest", "work"], "tags": ["accommodation"]},
+    {"id": "lighting_adj_01", "text": "Brighter lighting at my station would help me see clearly.", "intent": "request_adjustment", "difficulty": 4, "easy_read": "It is dark here.\nMore light helps me see.", "symbols": ["light", "look", "help"], "tags": ["accommodation", "low_vision"]},
+    {"id": "captions_adj_01", "text": "Could we have captions on for the training video?", "intent": "request_adjustment", "difficulty": 3, "easy_read": "I cannot hear the video.\nPlease turn on the words.", "symbols": ["captions", "training", "please"], "tags": ["accommodation", "deaf"]},
+    {"id": "interpreter_adj_01", "text": "I will need a sign language interpreter for the meeting.", "intent": "request_adjustment", "difficulty": 4, "easy_read": "I use sign language.\nPlease book a helper for the meeting.", "symbols": ["sign language", "meeting", "need"], "tags": ["accommodation", "deaf"]},
+    {"id": "thank_for_adjustment_01", "text": "Thank you for arranging that. It makes a real difference.", "intent": "express_gratitude", "difficulty": 4, "easy_read": "You helped me.\nIt helps my work a lot.\nI say thank you.", "symbols": ["thank you", "help", "good"], "tags": ["accommodation"]},
+    {"id": "return_from_leave_01", "text": "I am back from leave. Is there anything I should catch up on?", "intent": "request_information", "difficulty": 4, "easy_read": "I was away.\nNow I am back.\nI ask what I missed.", "symbols": ["come", "ask", "work"]},
+    {"id": "leave_form_01", "text": "Where do I submit my leave form?", "intent": "request_information", "difficulty": 2, "easy_read": "I filled the leave paper.\nI ask where to give it.", "symbols": ["form", "leave", "ask"]},
+    {"id": "adjust_review_01", "text": "Could we review my adjustments after a month to see if they work?", "intent": "request_adjustment", "difficulty": 5, "easy_read": "We changed some things for me.\nLet us talk again in one month.\nWe can see if it helps.", "symbols": ["check", "week", "work"], "tags": ["accommodation"]}
+  ]
+}

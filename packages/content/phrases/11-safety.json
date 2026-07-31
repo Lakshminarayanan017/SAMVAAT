@@ -1,0 +1,23 @@
+{
+  "slug": "safety",
+  "title": "Safety & escalation",
+  "target": 16,
+  "entries": [
+    {"id": "machine_unsafe_01", "text": "This machine is not working safely.", "intent": "report_safety", "difficulty": 3, "easy_read": "The machine is not safe.\nI tell someone now.", "symbols": ["machine", "safety", "tell"], "distractors": ["The machine is a bit odd.", "Something's wrong with it."], "errors": ["waiting to report a safety issue"]},
+    {"id": "stop_work_unsafe_01", "text": "I have stopped work because it is not safe.", "intent": "report_safety", "difficulty": 4, "easy_read": "It is not safe.\nI stopped my work.\nI tell my boss.", "symbols": ["not", "safety", "work"]},
+    {"id": "report_accident_01", "text": "There has been an accident. Please come quickly.", "intent": "report_emergency", "difficulty": 3, "easy_read": "Someone is hurt.\nI ask for help now.", "symbols": ["accident", "help", "come"]},
+    {"id": "someone_hurt_01", "text": "Someone is hurt near the loading bay.", "intent": "report_emergency", "difficulty": 3, "easy_read": "A person is hurt.\nI say where they are.", "symbols": ["accident", "help", "tell"]},
+    {"id": "spill_on_floor_01", "text": "There is a spill on the floor. It is slippery.", "intent": "report_safety", "difficulty": 3, "easy_read": "The floor is wet.\nPeople can fall.\nI tell someone.", "symbols": ["floor", "careful", "tell"]},
+    {"id": "need_safety_gear_01", "text": "I do not have the right gloves for this job.", "intent": "report_safety", "difficulty": 3, "easy_read": "I need safe gloves.\nI do not have them.", "symbols": ["safety", "need", "not"]},
+    {"id": "blocked_exit_01", "text": "The fire exit is blocked by boxes.", "intent": "report_safety", "difficulty": 3, "easy_read": "Boxes are in front of the door.\nThat is not safe.", "symbols": ["door", "box", "safety"]},
+    {"id": "ask_safe_way_01", "text": "What is the safe way to lift this?", "intent": "request_information", "difficulty": 3, "easy_read": "I do not want to hurt myself.\nI ask the safe way.", "symbols": ["safety", "ask", "help"]},
+    {"id": "escalate_to_manager_01", "text": "I told my supervisor, but it has not been fixed. Who else should I tell?", "intent": "escalate", "difficulty": 5, "easy_read": "I told my boss.\nNothing changed.\nI ask who else can help.", "symbols": ["supervisor", "not", "ask"]},
+    {"id": "near_miss_01", "text": "Nobody was hurt, but it nearly caused an accident.", "intent": "report_safety", "difficulty": 4, "easy_read": "Nothing bad happened.\nBut it almost did.\nI still tell someone.", "symbols": ["accident", "not", "tell"]},
+    {"id": "alarm_procedure_01", "text": "Where should I go if the alarm sounds?", "intent": "request_information", "difficulty": 3, "easy_read": "I ask what to do in danger.\nI ask where to go.", "symbols": ["safety", "go", "ask"]},
+    {"id": "evacuation_help_01", "text": "I will need help to leave the building in an emergency.", "intent": "request_adjustment", "difficulty": 5, "easy_read": "I cannot leave fast alone.\nI need a person to help me.\nWe plan this before.", "symbols": ["help", "door", "safety"], "tags": ["accommodation"]},
+    {"id": "alarm_visual_01", "text": "I cannot hear the alarm. Could we add a flashing light?", "intent": "request_adjustment", "difficulty": 5, "easy_read": "I cannot hear the alarm sound.\nA flashing light would tell me.", "symbols": ["captions", "light", "safety"], "tags": ["accommodation", "deaf"]},
+    {"id": "feeling_unwell_work_01", "text": "I am not feeling well. I need to sit down for a few minutes.", "intent": "report_health", "difficulty": 3, "easy_read": "I feel bad.\nI need to sit and rest.", "symbols": ["sad", "rest", "need"]},
+    {"id": "confirm_understood_safety_01", "text": "I have understood the safety rules and I have signed the form.", "intent": "confirm_understanding", "difficulty": 4, "easy_read": "I learned the safety rules.\nI signed the paper.", "symbols": ["safety", "understand", "form"]},
+    {"id": "refuse_unsafe_task_01", "text": "I am not trained for that machine. Could someone trained do it?", "intent": "decline", "difficulty": 5, "easy_read": "Nobody taught me that machine.\nIt is not safe for me.\nPlease ask a trained person.", "symbols": ["training", "not", "machine"]}
+  ]
+}

@@ -17,6 +17,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildValidator, formatErrors, FIXTURE_DIR, ROOT_SCHEMAS } from './schema-registry.mjs';
+import { A11Y_RULES, a11yViolations, brokenRules } from './a11y-rules.mjs';
 
 const ajv = buildValidator();
 let failures = 0;
@@ -47,76 +48,13 @@ function jsonFiles(dir) {
   return existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).sort() : [];
 }
 
-// ── A11Y RULES ────────────────────────────────────────────────────────────────
-// Each rule names the persona it protects. A rule protecting nobody in
-// docs/PERSONAS.md does not belong here.
-
-const A11Y_RULES = [
-  {
-    id: 'A11Y-1',
-    persona: 'P2 (Deaf)',
-    why: 'must be reachable without hearing anything',
-    message: 'needs at least one visual representation (caption, easy_read, isl_clip or pictographs)',
-    check: (b) => {
-      const r = b.representations ?? {};
-      return Boolean(r.caption || r.easy_read || r.isl_clip || r.pictographs?.length);
-    },
-  },
-  {
-    id: 'A11Y-2',
-    persona: 'P1 (low vision)',
-    why: 'must be reachable without seeing the screen',
-    message: 'is flagged requires_vision but has no audio_native representation',
-    // canonical_text is always screen-reader reachable, but a block whose meaning
-    // is genuinely visual needs a real audio track to stand in for it.
-    check: (b) => b.a11y?.requires_vision !== true || Boolean(b.representations?.audio_native),
-  },
-  {
-    id: 'A11Y-3',
-    persona: 'P2 (Deaf), P4 (AAC user)',
-    why: 'must be answerable without speaking',
-    message: 'accepts only speech input, which excludes every non-speaking learner',
-    check: (b) => (b.interaction?.accepted_input_modes ?? []).some((m) => m !== 'speech'),
-  },
-  {
-    id: 'A11Y-4',
-    persona: 'P4 (intellectual disability)',
-    why: 'must be readable at an Easy-Read level',
-    message: 'is learner-facing but has no easy_read representation',
-    check: (b) =>
-      !['phrase', 'instruction', 'interview_question'].includes(b.kind) ||
-      Boolean(b.representations?.easy_read),
-  },
-  {
-    id: 'A11Y-5',
-    persona: 'P4 (intellectual disability)',
-    why: 'Easy-Read means at most 15 words per sentence',
-    message: 'has an easy_read sentence longer than 15 words',
-    check: (b) => {
-      const t = b.representations?.easy_read;
-      if (!t) return true;
-      return t
-        .split(/\n|(?<=[.!?])\s+/)
-        .filter((s) => s.trim())
-        .every((s) => s.trim().split(/\s+/).length <= 15);
-    },
-  },
-  {
-    id: 'A11Y-6',
-    persona: 'P3 (dysarthria), P5 (stammer)',
-    why: 'speech must never be the only route to success',
-    message: 'sets requires_speech=true; no block may make speech mandatory',
-    check: (b) => b.a11y?.requires_speech !== true,
-  },
-];
-
-/** @returns {string[]} ids of the rules this block violates */
-function a11yViolations(block) {
-  return A11Y_RULES.filter((r) => !r.check(block)).map((r) => r.id);
-}
+// ── A11Y REPORTING ────────────────────────────────────────────────────────────
+// The rules themselves live in a11y-rules.mjs so the content build enforces the
+// identical set. Two copies would drift, and the drift would appear as content
+// that passes one gate and excludes a learner anyway.
 
 function reportA11y(block, label) {
-  const broken = A11Y_RULES.filter((r) => !r.check(block));
+  const broken = brokenRules(block);
   for (const rule of broken) {
     fail(`${label} → ${rule.id}`,
       `      ${rule.message}\n      ${dim(`protects ${rule.persona}: ${rule.why}`)}`);
@@ -164,18 +102,28 @@ for (const file of jsonFiles(validBlocks)) {
   if (reportA11y(block, block.id)) pass(`${block.id} reachable by all five personas`);
 }
 
-// Content authored in packages/content is held to exactly the same rules.
-const contentDir = join(FIXTURE_DIR, '..', '..', 'content', 'phrases');
-if (existsSync(contentDir)) {
+// The Workplace Language Bank is validated in depth by its own build
+// (`npm run content:validate`), which runs these same rules plus the Easy-Read
+// linter and a coverage report. Here we only confirm the built output is
+// schema-valid, so a stale or hand-edited dist cannot slip through.
+const builtBlocks = join(FIXTURE_DIR, '..', '..', 'content', 'dist', 'blocks.json');
+if (existsSync(builtBlocks)) {
   const validate = ajv.getSchema('content-block.schema.json');
-  for (const file of jsonFiles(contentDir)) {
-    const parsed = JSON.parse(readFileSync(join(contentDir, file), 'utf8'));
-    for (const block of Array.isArray(parsed) ? parsed : [parsed]) {
-      checks++;
-      if (!validate(block)) fail(`content/${block.id ?? file}`, formatErrors(validate.errors));
-      else if (reportA11y(block, `content/${block.id}`)) pass(`content/${block.id}`);
+  const blocks = JSON.parse(readFileSync(builtBlocks, 'utf8'));
+  let bad = 0;
+
+  for (const block of blocks) {
+    if (!validate(block)) {
+      bad++;
+      fail(`content/${block.id ?? '(no id)'}`, formatErrors(validate.errors));
+    } else if (brokenRules(block).length) {
+      bad++;
+      reportA11y(block, `content/${block.id}`);
     }
   }
+
+  checks++;
+  if (!bad) pass(`content bank: ${blocks.length} blocks schema-valid and accessible`);
 }
 
 // ── PASS 3 · GATE SELF-TEST ───────────────────────────────────────────────────

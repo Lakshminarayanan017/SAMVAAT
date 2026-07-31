@@ -1,0 +1,27 @@
+{
+  "slug": "interview",
+  "title": "Interview language",
+  "target": 20,
+  "entries": [
+    {"id": "greet_interviewer_01", "text": "Good morning. Thank you for meeting me.", "intent": "greeting", "difficulty": 2, "easy_read": "I say hello.\nI say thank you for the meeting.", "symbols": ["hello", "thank you", "meeting"]},
+    {"id": "tell_about_yourself_01", "text": "I am Ravi. I have two years of experience in packaging.", "intent": "self_introduction", "difficulty": 3, "easy_read": "I say my name.\nI say what work I have done.", "symbols": ["i", "work", "say"], "hints": ["Name first", "Then your experience", "Keep it short"]},
+    {"id": "strength_01", "text": "My strength is that I am consistent and careful.", "intent": "self_advocacy", "difficulty": 3, "easy_read": "I say what I am good at.\nI do careful work every day.", "symbols": ["good", "careful", "work"], "distractors": ["I'm good at everything.", "I don't know really."]},
+    {"id": "strength_example_01", "text": "For example, I checked every order and made no errors last month.", "intent": "self_advocacy", "difficulty": 4, "easy_read": "I give one real example.\nLast month my work had no mistakes.", "symbols": ["check", "order", "good"], "hints": ["Always give one real example"]},
+    {"id": "weakness_01", "text": "I used to work slowly, so I practised until I became faster.", "intent": "self_advocacy", "difficulty": 4, "easy_read": "Before, I was slow.\nI practised a lot.\nNow I am faster.", "symbols": ["slow", "learn", "good"], "errors": ["giving a weakness with no improvement story"]},
+    {"id": "why_this_job_01", "text": "I want this job because I enjoy careful, steady work.", "intent": "state_motivation", "difficulty": 3, "easy_read": "I say why I want the job.\nI like careful work.", "symbols": ["want", "job", "careful"]},
+    {"id": "star_situation_01", "text": "Last year our machine broke during a busy shift.", "intent": "describe_situation", "difficulty": 4, "easy_read": "I tell a story.\nFirst I say what happened.", "symbols": ["machine", "problem", "shift"], "tags": ["star"]},
+    {"id": "star_task_01", "text": "My job was to keep the orders moving.", "intent": "describe_task", "difficulty": 3, "easy_read": "I say what my job was.", "symbols": ["job", "order", "work"], "tags": ["star"]},
+    {"id": "star_action_01", "text": "I told my supervisor and moved to packing by hand.", "intent": "describe_action", "difficulty": 4, "easy_read": "I say what I did.\nI told my boss.\nI packed by hand.", "symbols": ["tell", "supervisor", "work"], "tags": ["star"]},
+    {"id": "star_result_01", "text": "We finished all the orders on time that day.", "intent": "describe_result", "difficulty": 3, "easy_read": "I say what happened at the end.\nAll work was done on time.", "symbols": ["finish", "order", "good"], "tags": ["star"]},
+    {"id": "teamwork_example_01", "text": "I work well in a team. I helped train two new joiners.", "intent": "self_advocacy", "difficulty": 4, "easy_read": "I work well with others.\nI helped teach two new people.", "symbols": ["team", "help", "training"]},
+    {"id": "handle_pressure_01", "text": "When it is busy, I take one task at a time and stay calm.", "intent": "self_advocacy", "difficulty": 4, "easy_read": "When there is a lot of work,\nI do one thing at a time.", "symbols": ["work", "careful", "ready"]},
+    {"id": "ask_about_role_01", "text": "May I ask what a normal day looks like in this role?", "intent": "request_information", "difficulty": 3, "easy_read": "I ask about the job.\nI ask what I would do each day.", "symbols": ["ask", "job", "today"]},
+    {"id": "ask_about_training_01", "text": "Will there be training for the equipment?", "intent": "request_information", "difficulty": 3, "easy_read": "I ask if you will teach me.\nI want to learn the machines.", "symbols": ["training", "machine", "ask"]},
+    {"id": "ask_about_team_01", "text": "Could you tell me about the team I would work with?", "intent": "request_information", "difficulty": 3, "easy_read": "I ask about the people.\nI want to know my team.", "symbols": ["ask", "team", "know"]},
+    {"id": "gap_in_work_01", "text": "I took time out for treatment, and I am ready to work now.", "intent": "self_advocacy", "difficulty": 5, "easy_read": "I did not work for some time.\nI was getting better.\nNow I am ready.", "symbols": ["time", "rest", "ready"], "hints": ["State it simply", "Then move to the present"]},
+    {"id": "no_experience_but_01", "text": "I have not used that machine, but I learn quickly and I follow instructions well.", "intent": "self_advocacy", "difficulty": 5, "easy_read": "I have not used that machine.\nI learn fast.\nI follow the steps well.", "symbols": ["not", "machine", "learn"]},
+    {"id": "salary_question_01", "text": "May I ask what the pay for this role is?", "intent": "request_information", "difficulty": 4, "easy_read": "I ask about the money.\nI ask politely.", "symbols": ["salary", "ask", "please"]},
+    {"id": "closing_interest_01", "text": "I am very interested in this role. Thank you for your time.", "intent": "express_interest", "difficulty": 3, "easy_read": "I say I want this job.\nI say thank you.", "symbols": ["want", "job", "thank you"]},
+    {"id": "ask_next_steps_01", "text": "May I ask what the next steps are?", "intent": "request_information", "difficulty": 3, "easy_read": "I ask what happens now.\nI ask when you will tell me.", "symbols": ["ask", "time", "job"]}
+  ]
+}

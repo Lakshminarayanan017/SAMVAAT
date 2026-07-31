@@ -1,0 +1,21 @@
+{
+  "slug": "small_talk",
+  "title": "Small talk & belonging",
+  "target": 14,
+  "entries": [
+    {"id": "how_was_weekend_01", "text": "How was your weekend?", "intent": "small_talk", "difficulty": 2, "easy_read": "I ask about your rest days.\nIt is friendly.", "symbols": ["ask", "week", "happy"]},
+    {"id": "weekend_answer_01", "text": "It was good, thank you. I rested at home.", "intent": "small_talk", "difficulty": 2, "easy_read": "My rest days were nice.\nI stayed at home.", "symbols": ["good", "rest", "thank you"]},
+    {"id": "lunch_invite_01", "text": "Would you like to have lunch with us?", "intent": "invite", "difficulty": 2, "easy_read": "We are eating together.\nI ask you to come.", "symbols": ["lunch", "ask", "we"]},
+    {"id": "accept_invite_01", "text": "Yes, I would like that. Thank you.", "intent": "accept_invite", "difficulty": 2, "easy_read": "I say yes.\nI say thank you.", "symbols": ["yes", "thank you", "happy"]},
+    {"id": "decline_invite_01", "text": "Thank you, but I will eat later today.", "intent": "decline", "difficulty": 3, "easy_read": "I say thank you.\nI cannot come now.", "symbols": ["thank you", "not", "lunch"]},
+    {"id": "ask_about_work_01", "text": "How long have you worked here?", "intent": "small_talk", "difficulty": 2, "easy_read": "I ask about your time here.\nIt starts a talk.", "symbols": ["ask", "work", "time"]},
+    {"id": "compliment_colleague_01", "text": "You always keep this area so tidy.", "intent": "small_talk", "difficulty": 3, "easy_read": "I say something kind.\nYour work place is clean.", "symbols": ["good", "work", "say"]},
+    {"id": "weather_talk_01", "text": "It is very hot today, isn't it?", "intent": "small_talk", "difficulty": 2, "easy_read": "The day is hot.\nI say it to start a talk.", "symbols": ["today", "say"]},
+    {"id": "join_group_01", "text": "May I join you?", "intent": "join_group", "difficulty": 2, "easy_read": "People are together.\nI ask to sit with them.", "symbols": ["ask", "we", "come"]},
+    {"id": "leave_conversation_01", "text": "I should get back to work now. See you later.", "intent": "farewell", "difficulty": 3, "easy_read": "I must work now.\nI say goodbye kindly.", "symbols": ["work", "goodbye", "now"]},
+    {"id": "ask_about_festival_01", "text": "Are you doing anything for the festival?", "intent": "small_talk", "difficulty": 3, "easy_read": "A festival is coming.\nI ask about your plans.", "symbols": ["ask", "happy", "holiday"]},
+    {"id": "share_about_self_01", "text": "I travel by bus, so I leave a bit early.", "intent": "small_talk", "difficulty": 3, "easy_read": "I tell something about me.\nI take the bus home.", "symbols": ["go", "early", "say"]},
+    {"id": "did_not_catch_social_01", "text": "Sorry, I missed that. It is a bit loud in here.", "intent": "request_clarification", "difficulty": 3, "easy_read": "It is noisy.\nI did not hear you.\nI say sorry.", "symbols": ["sorry", "hear", "quiet"]},
+    {"id": "include_someone_01", "text": "Come and sit with us, there is room here.", "intent": "invite", "difficulty": 3, "easy_read": "I see someone alone.\nI ask them to sit with us.", "symbols": ["come", "we", "welcome"]}
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "slug": "telephone",
+  "title": "Telephone etiquette",
+  "target": 14,
+  "entries": [
+    {"id": "answer_call_01", "text": "Good morning, packaging department. Ravi speaking.", "intent": "answer_call", "difficulty": 3, "easy_read": "The phone rings.\nI say hello.\nI say my team and my name.", "symbols": ["phone", "hello", "team"], "distractors": ["Hello?", "Yes?"]},
+    {"id": "ask_who_calling_01", "text": "May I know who is calling, please?", "intent": "request_information", "difficulty": 3, "easy_read": "I do not know this person.\nI ask their name.", "symbols": ["phone", "ask", "please"]},
+    {"id": "hold_please_01", "text": "Could you hold for a moment, please?", "intent": "manage_call", "difficulty": 2, "easy_read": "Please wait a little.\nI will come back.", "symbols": ["wait", "please", "phone"]},
+    {"id": "transfer_call_01", "text": "I will put you through to my supervisor.", "intent": "manage_call", "difficulty": 3, "easy_read": "I will pass the phone.\nMy boss will talk to you.", "symbols": ["phone", "supervisor", "give"]},
+    {"id": "cannot_hear_phone_01", "text": "Sorry, the line is not clear. Could you say that again?", "intent": "request_clarification", "difficulty": 3, "easy_read": "The phone sound is bad.\nPlease say it again.", "symbols": ["phone", "hear", "again"]},
+    {"id": "take_message_01", "text": "She is not at her desk. May I take a message?", "intent": "manage_call", "difficulty": 3, "easy_read": "She is not here now.\nI can write your words.", "symbols": ["not", "written", "ask"]},
+    {"id": "confirm_number_01", "text": "Could you repeat the number slowly, please?", "intent": "request_clarification", "difficulty": 3, "easy_read": "I want to write the number.\nPlease say it slowly.", "symbols": ["phone", "slowly", "written"]},
+    {"id": "call_back_01", "text": "May I call you back in ten minutes?", "intent": "manage_call", "difficulty": 3, "easy_read": "I am busy now.\nI will phone you later.", "symbols": ["phone", "time", "ask"]},
+    {"id": "prefer_message_01", "text": "I find it easier on message. Could you send me the details?", "intent": "request_adjustment", "difficulty": 4, "easy_read": "Phone calls are hard for me.\nPlease send a message.", "symbols": ["email", "phone", "please"], "tags": ["accommodation"]},
+    {"id": "end_call_01", "text": "Thank you for calling. Goodbye.", "intent": "end_call", "difficulty": 1, "easy_read": "The talk is done.\nI say thank you and goodbye.", "symbols": ["thank you", "goodbye", "phone"]},
+    {"id": "wrong_number_01", "text": "I think you have the wrong number.", "intent": "manage_call", "difficulty": 2, "easy_read": "This is not the right person.\nI tell them kindly.", "symbols": ["phone", "not", "tell"]},
+    {"id": "report_absence_phone_01", "text": "Good morning. This is Ravi. I am unwell and cannot come in today.", "intent": "report_absence", "difficulty": 4, "easy_read": "I phone my boss.\nI say my name.\nI say I am not well.", "symbols": ["phone", "sad", "work"]},
+    {"id": "check_right_person_01", "text": "Am I speaking to the stores department?", "intent": "confirm_understanding", "difficulty": 3, "easy_read": "I want the right team.\nI ask if this is them.", "symbols": ["ask", "team", "phone"]},
+    {"id": "leave_voicemail_01", "text": "This is Ravi from packaging. Please call me back when you can.", "intent": "manage_call", "difficulty": 4, "easy_read": "Nobody answers.\nI say my name and my team.\nI ask them to phone me.", "symbols": ["phone", "team", "ask"]}
+  ]
+}

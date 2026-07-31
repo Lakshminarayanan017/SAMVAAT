@@ -1,0 +1,19 @@
+{
+  "slug": "self_advocacy",
+  "title": "Self-advocacy & disclosure",
+  "target": 12,
+  "entries": [
+    {"id": "disclose_deaf_01", "text": "I have a hearing disability. Captions help me a lot.", "intent": "disclose", "difficulty": 4, "easy_read": "I cannot hear well.\nWords on the screen help me.", "symbols": ["deaf", "captions", "help"], "tags": ["disclosure", "deaf"], "hints": ["Say the fact", "Then say what helps", "You do not owe more detail"]},
+    {"id": "disclose_low_vision_01", "text": "I have low vision. Large print and good lighting help me work well.", "intent": "disclose", "difficulty": 4, "easy_read": "I cannot see small things.\nBig words and bright light help me.", "symbols": ["blind", "light", "help"], "tags": ["disclosure", "low_vision"]},
+    {"id": "disclose_speech_01", "text": "I have a speech difference. Please give me a moment to finish.", "intent": "disclose", "difficulty": 5, "easy_read": "My talking sounds different.\nPlease wait for me to finish.\nDo not say my words for me.", "symbols": ["say", "wait", "please"], "tags": ["disclosure", "stammer"], "errors": ["apologising for the disability"]},
+    {"id": "disclose_learning_01", "text": "I learn best when instructions are written down and shown once.", "intent": "disclose", "difficulty": 4, "easy_read": "I learn well with written steps.\nShow me one time.\nThen I can do it.", "symbols": ["learn", "written", "show"], "tags": ["disclosure"]},
+    {"id": "what_i_can_do_01", "text": "This is what I do well, and this is what I need to do it.", "intent": "self_advocacy", "difficulty": 5, "easy_read": "I say what I am good at.\nI say what helps me.", "symbols": ["good", "need", "say"], "tags": ["disclosure"], "hints": ["Lead with ability", "Then the support"]},
+    {"id": "not_a_problem_01", "text": "It is not a problem, it is just how I work best.", "intent": "self_advocacy", "difficulty": 5, "easy_read": "This is not a bad thing.\nIt is just my way of working.", "symbols": ["not", "problem", "work"], "tags": ["disclosure"]},
+    {"id": "correct_assumption_01", "text": "I can do that task. I just do it in a different way.", "intent": "self_advocacy", "difficulty": 5, "easy_read": "Someone thinks I cannot do it.\nI can do it.\nI do it another way.", "symbols": ["work", "can", "say"], "tags": ["disclosure"]},
+    {"id": "decline_to_disclose_01", "text": "I would rather not go into detail, but I can tell you what support helps.", "intent": "self_advocacy", "difficulty": 5, "easy_read": "I do not want to say everything.\nI can say what helps me.", "symbols": ["not", "say", "help"], "tags": ["disclosure"], "hints": ["You choose how much to share"]},
+    {"id": "ask_who_knows_01", "text": "Who else will know about this? I would like it kept private.", "intent": "request_information", "difficulty": 5, "easy_read": "I ask who will be told.\nI want this kept private.", "symbols": ["ask", "know", "quiet"], "tags": ["disclosure"]},
+    {"id": "ask_policy_01", "text": "Does the company have a policy on workplace adjustments?", "intent": "request_information", "difficulty": 4, "easy_read": "I ask about the rules.\nI ask how they help disabled workers.", "symbols": ["ask", "form", "support"], "tags": ["disclosure"]},
+    {"id": "raise_unfair_treatment_01", "text": "I felt left out of that decision. Could we talk about it?", "intent": "raise_concern", "difficulty": 5, "easy_read": "Nobody asked me.\nThat did not feel right.\nI want to talk about it.", "symbols": ["sad", "say", "ask"], "tags": ["disclosure"]},
+    {"id": "thank_for_listening_01", "text": "Thank you for listening. It means a lot to me.", "intent": "express_gratitude", "difficulty": 3, "easy_read": "You listened to me.\nI say thank you.", "symbols": ["thank you", "listen", "happy"], "tags": ["disclosure"]}
+  ]
+}

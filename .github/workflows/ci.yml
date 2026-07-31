@@ -34,6 +34,14 @@ jobs:
       - name: Generated code matches the schemas
         run: npm run contracts:check
 
+      # The Workplace Language Bank is built before the contracts gate runs, so
+      # the gate validates the real corpus rather than skipping a missing dist.
+      - name: Build the Workplace Language Bank
+        run: npm run content:build
+
+      - name: Content — schema, accessibility, Easy-Read and coverage
+        run: npm run content:validate
+
       - name: Schema, accessibility and gate self-test
         run: npm run contracts:validate
 
@@ -118,8 +126,10 @@ jobs:
 
       - run: npm ci
 
-      # The web app imports the generated types, so they must exist first.
+      # The web app imports the generated types and the built phrase bank, so
+      # both must exist before it can typecheck or build.
       - run: npm run contracts:build
+      - run: npm run content:build
 
       - run: npm run lint -w @samvaad/web
 

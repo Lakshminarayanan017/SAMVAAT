@@ -1,0 +1,23 @@
+{
+  "slug": "written",
+  "title": "Email & written messages",
+  "target": 16,
+  "entries": [
+    {"id": "email_greeting_01", "text": "Dear Sir, Good morning.", "intent": "greeting", "difficulty": 2, "easy_read": "I start my message.\nI say hello politely.", "symbols": ["email", "hello", "written"]},
+    {"id": "email_purpose_01", "text": "I am writing to ask about my shift timing.", "intent": "state_purpose", "difficulty": 3, "easy_read": "I say why I write.\nI want to ask about my hours.", "symbols": ["written", "ask", "shift"]},
+    {"id": "attach_file_01", "text": "Please find the report attached.", "intent": "share_information", "difficulty": 3, "easy_read": "I send a file with my message.\nI tell you it is there.", "symbols": ["email", "report", "give"]},
+    {"id": "email_thanks_01", "text": "Thank you for your time.", "intent": "express_gratitude", "difficulty": 1, "easy_read": "I say thank you.", "symbols": ["thank you", "time"]},
+    {"id": "email_signoff_01", "text": "Kind regards, Ravi.", "intent": "farewell", "difficulty": 2, "easy_read": "I end my message.\nI write my name.", "symbols": ["written", "goodbye"]},
+    {"id": "email_reply_confirm_01", "text": "Thank you for your message. I will do it today.", "intent": "confirm_understanding", "difficulty": 3, "easy_read": "I got your message.\nI will do the work today.", "symbols": ["email", "work", "today"]},
+    {"id": "email_ask_deadline_01", "text": "May I know by when you need this?", "intent": "request_information", "difficulty": 3, "easy_read": "I ask when it must be done.", "symbols": ["ask", "time", "finish"]},
+    {"id": "email_apology_01", "text": "I am sorry for the delay in replying.", "intent": "apologise", "difficulty": 3, "easy_read": "I answered late.\nI say sorry.", "symbols": ["sorry", "late", "email"]},
+    {"id": "email_leave_request_01", "text": "I would like to request leave on Friday, the tenth.", "intent": "request_leave", "difficulty": 3, "easy_read": "I write to ask for a day off.\nThe day is Friday.", "symbols": ["email", "leave", "friday"]},
+    {"id": "email_follow_up_01", "text": "I am following up on my message from Monday.", "intent": "follow_up", "difficulty": 4, "easy_read": "I wrote to you on Monday.\nI did not get an answer.\nI write again.", "symbols": ["email", "monday", "again"]},
+    {"id": "email_short_update_01", "text": "Quick update: all orders for today are packed.", "intent": "report_completion", "difficulty": 3, "easy_read": "I send a short message.\nAll the work is done.", "symbols": ["email", "order", "finish"]},
+    {"id": "email_ask_clarify_01", "text": "Could you clarify point two, please?", "intent": "request_clarification", "difficulty": 3, "easy_read": "I do not understand part two.\nPlease explain it.", "symbols": ["ask", "explain", "please"]},
+    {"id": "email_cc_note_01", "text": "I have copied my supervisor on this message.", "intent": "share_information", "difficulty": 4, "easy_read": "My boss can see this message too.\nI tell you so you know.", "symbols": ["email", "supervisor", "tell"]},
+    {"id": "email_accessible_format_01", "text": "Could you send this as plain text? It works better with my screen reader.", "intent": "request_adjustment", "difficulty": 5, "easy_read": "Pictures of words do not work for me.\nPlease send simple text.\nThen my computer can read it.", "symbols": ["email", "read", "computer"], "tags": ["accommodation", "low_vision"]},
+    {"id": "email_confirm_receipt_01", "text": "I confirm I have received the documents.", "intent": "confirm_understanding", "difficulty": 3, "easy_read": "Your papers came to me.\nI tell you they arrived.", "symbols": ["email", "form", "yes"]},
+    {"id": "email_polite_reminder_01", "text": "This is a gentle reminder about the pending approval.", "intent": "follow_up", "difficulty": 4, "easy_read": "I still need your yes.\nI ask again in a kind way.", "symbols": ["email", "wait", "manager"]}
+  ]
+}

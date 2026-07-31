@@ -1,0 +1,39 @@
+{
+  "_comment": "Deliberately defective entries. Each must trip the check named in `expect`. This is the gate self-test: a linter nobody tests is a linter that has silently stopped working — the same reasoning as the contracts gate self-test and the ESLint boundary self-test.",
+  "cases": [
+    {
+      "expect": "sentence too long",
+      "block": {
+        "canonical_text": "Could you please repeat that?",
+        "representations": {
+          "easy_read": "If you would not mind terribly I would very much like you to say that again for me."
+        }
+      }
+    },
+    {
+      "expect": "abstract word",
+      "block": {
+        "canonical_text": "It helps me if instructions are written down.",
+        "representations": {
+          "easy_read": "I need a workplace accommodation.\nPlease write things down."
+        }
+      }
+    },
+    {
+      "expect": "identical to the phrase",
+      "block": {
+        "canonical_text": "Good morning.",
+        "representations": { "easy_read": "Good morning." }
+      }
+    },
+    {
+      "expect": "second abstract word",
+      "block": {
+        "canonical_text": "May I ask for clarification?",
+        "representations": {
+          "easy_read": "I want clarification.\nI ask for it."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "slug": "clarification",
+  "title": "Asking for clarification",
+  "target": 20,
+  "entries": [
+    {"id": "repeat_request_01", "text": "Could you please repeat that?", "intent": "request_clarification", "difficulty": 2, "easy_read": "I did not hear.\nI ask again.", "symbols": ["again", "say", "please"], "isl": "AGAIN SAY PLEASE", "distractors": ["What did you say?", "Say again!", "I don't understand you."], "errors": ["omitting please"]},
+    {"id": "did_not_hear_01", "text": "Sorry, I did not hear that.", "intent": "request_clarification", "difficulty": 2, "easy_read": "I did not hear you.\nI say sorry.", "symbols": ["sorry", "hear", "not"]},
+    {"id": "speak_slowly_01", "text": "Could you speak a little more slowly, please?", "intent": "request_accommodation", "difficulty": 2, "easy_read": "You talk fast.\nPlease talk slowly.", "symbols": ["slowly", "say", "please"], "errors": ["saying it as a command"]},
+    {"id": "did_not_understand_01", "text": "I did not understand that. Could you explain it again?", "intent": "request_clarification", "difficulty": 3, "easy_read": "I do not understand.\nPlease tell me again.", "symbols": ["understand", "not", "explain"]},
+    {"id": "write_it_down_01", "text": "Could you write that down for me, please?", "intent": "request_accommodation", "difficulty": 2, "easy_read": "Please write it for me.\nThen I can read it.", "symbols": ["written", "please", "read"], "tags": ["accommodation"]},
+    {"id": "show_me_01", "text": "Could you show me how to do it?", "intent": "request_clarification", "difficulty": 2, "easy_read": "Please show me.\nThen I can do it.", "symbols": ["show", "help", "please"]},
+    {"id": "check_understanding_01", "text": "So I should finish this box first. Is that right?", "intent": "confirm_understanding", "difficulty": 3, "easy_read": "I say what I heard.\nI ask if it is right.", "symbols": ["box", "finish", "ask"], "hints": ["Repeat the instruction back", "Then ask if it is right"]},
+    {"id": "which_one_01", "text": "Sorry, which one do you mean?", "intent": "request_clarification", "difficulty": 2, "easy_read": "There are many.\nI ask which one.", "symbols": ["ask", "sorry"]},
+    {"id": "one_more_time_01", "text": "One more time, please.", "intent": "request_clarification", "difficulty": 1, "easy_read": "Please say it again.", "symbols": ["again", "please"]},
+    {"id": "spell_it_01", "text": "Could you spell that for me, please?", "intent": "request_clarification", "difficulty": 2, "easy_read": "I do not know that word.\nPlease say each letter.", "symbols": ["written", "please", "say"]},
+    {"id": "missed_last_part_01", "text": "I caught the first part but not the last part.", "intent": "request_clarification", "difficulty": 3, "easy_read": "I heard the start.\nI did not hear the end.", "symbols": ["hear", "start", "not"]},
+    {"id": "confirm_task_01", "text": "Just to be sure, you want this done today?", "intent": "confirm_understanding", "difficulty": 3, "easy_read": "I want to be sure.\nYou want it today.\nIs that right?", "symbols": ["sure", "today", "ask"]},
+    {"id": "face_me_01", "text": "Could you face me when you speak? It helps me understand.", "intent": "request_accommodation", "difficulty": 3, "easy_read": "Please look at me.\nThen I can understand you.", "symbols": ["look", "understand", "please"], "tags": ["accommodation", "deaf"]},
+    {"id": "too_noisy_01", "text": "It is very noisy here. Could we talk somewhere quieter?", "intent": "request_accommodation", "difficulty": 3, "easy_read": "It is loud here.\nCan we go somewhere quiet?", "symbols": ["quiet", "go", "ask"], "tags": ["accommodation"]},
+    {"id": "ask_meaning_01", "text": "What does that word mean?", "intent": "request_information", "difficulty": 2, "easy_read": "I do not know that word.\nI ask what it means.", "symbols": ["ask", "know", "not"]},
+    {"id": "give_me_moment_01", "text": "Give me a moment to think, please.", "intent": "request_time", "difficulty": 2, "easy_read": "I need to think.\nPlease wait a little.", "symbols": ["think", "wait", "please"], "tags": ["accommodation"]},
+    {"id": "send_in_writing_01", "text": "Could you send me the instructions in writing?", "intent": "request_accommodation", "difficulty": 3, "easy_read": "Please send me a message.\nThen I can read the steps.", "symbols": ["written", "instruction", "email"], "tags": ["accommodation"]},
+    {"id": "point_to_it_01", "text": "Could you point to the one you mean?", "intent": "request_clarification", "difficulty": 2, "easy_read": "I am not sure which one.\nPlease show me with your hand.", "symbols": ["show", "please"]},
+    {"id": "step_by_step_01", "text": "Could you tell me the steps one at a time?", "intent": "request_accommodation", "difficulty": 3, "easy_read": "Too many steps at once.\nPlease tell me one step.\nThen the next step.", "symbols": ["instruction", "explain", "please"], "tags": ["accommodation"]},
+    {"id": "confirm_before_start_01", "text": "Before I start, may I check one thing with you?", "intent": "confirm_understanding", "difficulty": 3, "easy_read": "I want to ask first.\nThen I will start work.", "symbols": ["ask", "start", "check"]}
+  ]
+}

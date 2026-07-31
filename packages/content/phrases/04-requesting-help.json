@@ -1,0 +1,23 @@
+{
+  "slug": "requesting_help",
+  "title": "Requesting help",
+  "target": 16,
+  "entries": [
+    {"id": "need_help_01", "text": "Could you help me, please?", "intent": "request_help", "difficulty": 1, "easy_read": "I need help.\nI ask politely.", "symbols": ["help", "please", "ask"], "isl": "HELP-ME PLEASE", "distractors": ["Help me!", "I need help now."]},
+    {"id": "show_once_more_01", "text": "Could you show me once more?", "intent": "request_help", "difficulty": 2, "easy_read": "Please show me again.\nThen I will know.", "symbols": ["show", "again", "please"]},
+    {"id": "help_with_machine_01", "text": "I need help with this machine.", "intent": "request_help", "difficulty": 2, "easy_read": "The machine is hard for me.\nI need help.", "symbols": ["machine", "help", "need"], "tags": ["warehouse"]},
+    {"id": "who_can_help_01", "text": "Who can help me with this?", "intent": "request_help", "difficulty": 2, "easy_read": "I do not know who to ask.\nI ask who can help.", "symbols": ["help", "ask", "who"]},
+    {"id": "not_sure_how_01", "text": "I am not sure how to do this. Could you guide me?", "intent": "request_help", "difficulty": 3, "easy_read": "I do not know how.\nPlease teach me.", "symbols": ["not", "know", "help"]},
+    {"id": "too_heavy_01", "text": "This is too heavy for me. Could someone give me a hand?", "intent": "request_help", "difficulty": 3, "easy_read": "This box is very heavy.\nI need someone to help me lift it.", "symbols": ["box", "help", "difficult"], "tags": ["warehouse", "accommodation"]},
+    {"id": "when_free_01", "text": "When you are free, could you check my work?", "intent": "request_help", "difficulty": 3, "easy_read": "You are busy now.\nPlease look at my work later.", "symbols": ["check", "work", "wait"]},
+    {"id": "ask_colleague_01", "text": "Sorry to bother you. Do you have a minute?", "intent": "request_help", "difficulty": 3, "easy_read": "I say sorry for stopping you.\nI ask for a little time.", "symbols": ["sorry", "time", "ask"]},
+    {"id": "cannot_reach_01", "text": "I cannot reach that shelf. Could you pass it to me?", "intent": "request_help", "difficulty": 3, "easy_read": "The shelf is too high.\nPlease give it to me.", "symbols": ["give", "help", "not"], "tags": ["accommodation"]},
+    {"id": "help_reading_01", "text": "Could you read this out for me, please?", "intent": "request_accommodation", "difficulty": 2, "easy_read": "I want to know what it says.\nPlease read it to me.", "symbols": ["read", "please", "help"], "tags": ["accommodation"]},
+    {"id": "help_filling_form_01", "text": "Could you help me fill in this form?", "intent": "request_help", "difficulty": 2, "easy_read": "This form is hard.\nPlease help me write it.", "symbols": ["form", "help", "written"], "tags": ["accommodation"]},
+    {"id": "stuck_ask_01", "text": "I am stuck. Could you look at this with me?", "intent": "request_help", "difficulty": 3, "easy_read": "I cannot go on.\nPlease look with me.", "symbols": ["help", "look", "problem"]},
+    {"id": "thank_after_help_01", "text": "Thank you for helping me. That is much clearer now.", "intent": "express_gratitude", "difficulty": 3, "easy_read": "You helped me.\nI say thank you.\nNow I understand.", "symbols": ["thank you", "help", "understand"]},
+    {"id": "ask_supervisor_01", "text": "May I ask my supervisor about this?", "intent": "request_permission", "difficulty": 2, "easy_read": "I want to ask my boss.\nI ask if that is okay.", "symbols": ["ask", "supervisor", "ok"]},
+    {"id": "training_request_01", "text": "I would like more training on this task.", "intent": "request_help", "difficulty": 3, "easy_read": "I want to learn more.\nPlease teach me this job.", "symbols": ["training", "learn", "task"]},
+    {"id": "buddy_request_01", "text": "Could someone work with me the first few times?", "intent": "request_accommodation", "difficulty": 4, "easy_read": "This is new for me.\nPlease let someone work with me.\nAfter that I can work alone.", "symbols": ["work", "help", "start"], "tags": ["accommodation"]}
+  ]
+}
