@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (M1 auth + persistence) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (M1 complete — auth, persistence, onboarding) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -13,7 +13,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | # | Module | State | Note |
 |---|---|---|---|
 | M0 | Foundations, contracts, CI, ethics charter | ✅ done | |
-| M1 | Identity, consent & CAP | 🟡 partial | Auth, guest sessions, database and repositories done. **No onboarding funnel yet.** |
+| M1 | Identity, consent & CAP | ✅ done | Auth, guest sessions, database, repositories, four-door onboarding. Speech enrolment (stage 3) deferred to M8 by design. |
 | M2 | Modality Router & design system | ✅ done | |
 | M3 | Workplace Language Bank | ✅ done | 226 phrases. Assets outstanding — see below. |
 | M4 | Practice loop (FSRS) | ✅ done | Reachable end-to-end. |
@@ -33,7 +33,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M18 | Accessibility validation & pilot | 🟡 partial | axe + persona tests in CI. **No manual screen-reader passes. No pilot partner.** |
 | M19 | Observability & MLOps | 🟡 partial | Structured logging, tracing, redaction shipped. **No Sentry, no metrics, no dashboards.** |
 
-**8 done · 8 partial · 4 not started.**
+**9 done · 7 partial · 4 not started.**
 
 ---
 
@@ -41,19 +41,19 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 
 ### 🔴 Blocking a real learner
 
-| Gap | Consequence | Where |
-|---|---|---|
-| **No onboarding.** The CAP is hard-coded to a demo persona | A real learner cannot tell us how they need to be spoken to, so the Modality Router serves a fixture rather than a person | M1 |
+**None.** For the first time, a learner can open this, be asked how they need to
+be spoken to, and have the answer shape everything that follows — persistently,
+under their own identity.
 
 **Closed since the last update:**
 
 | Was | Now |
 |---|---|
 | ~~No database~~ | SQLAlchemy async, SQLite in dev and tests, Postgres in production. Every store is a real repository. |
-| ~~No authentication~~ | JWT sessions, guest-first. `user_id` has been **removed from every request model**, so identity can only come from the token. 34 tests, including an IDOR regression suite. |
+| ~~No authentication~~ | JWT sessions, guest-first. `user_id` **removed from every request model**, so identity can only come from the token. IDOR regression suite. |
+| ~~No onboarding~~ | Four-door screen, then confirmation asked *through* the chosen channel. Profile validated against the contract and versioned in the database. |
 
-The onboarding funnel is now the only thing between this and a product a real
-learner could be handed.
+What remains is breadth, not viability.
 
 ### 🟠 Blocking a claim we make
 
@@ -85,6 +85,8 @@ learner could be handed.
 | No password or magic-link sign-in | Guest + upgrade covers the demo, and passwords are a liability we do not need | M17, when Supabase Auth lands behind the same `authenticate` dependency |
 | No Alembic migrations yet | `create_all` is correct for SQLite dev and tests | First Postgres deployment — `create_all` cannot alter a table and fails silently |
 | Social stories have no UI | The endpoint works and is testable | Whenever a learner is meant to read one |
+| The practice loop has no client screen | The API is complete and tested; the tab says so plainly rather than showing a blank | Next client work, after M14 |
+| Session token in `localStorage` | An httpOnly cookie needs a same-site deployment we do not have, and would break offline identity in M15 | When client and API share a domain |
 
 ---
 
@@ -93,14 +95,14 @@ learner could be handed.
 | Job | Covers |
 |---|---|
 | `contracts` | Schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 144 tests, lint, cross-language contract round-trip, IDOR regression suite |
+| `api` | 158 tests, lint, cross-language contract round-trip, IDOR regression suite |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 126 tests, lint, typecheck, build, axe sweep across every channel and input mode |
+| `web` | 148 tests, lint, typecheck, build, axe sweep across every channel and input mode |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**674 tests.** Nothing merges without all seven green.
+**710 tests.** Nothing merges without all seven green.
 
 ---
 
