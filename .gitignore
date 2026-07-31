@@ -50,3 +50,6 @@ test-results/
 # ── source material (kept out of the code repo) ───────────────
 *.pptx
 *.key.pdf
+
+# trained weights live in the model registry, not in git
+services/speech/training/*.zip
