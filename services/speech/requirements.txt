@@ -1,0 +1,11 @@
+# SAMVAAD speech service — runtime dependencies
+#
+# Deliberately minimal for now. Heavy ML dependencies (torch, transformers,
+# torchaudio, praat-parselmouth, opensmile, librosa, onnxruntime) land with the
+# module that first needs them (M6-M8), so the container stays small and the
+# free-tier build stays inside its time limit until it genuinely cannot.
+
+fastapi>=0.115,<0.116
+uvicorn[standard]>=0.32,<0.33
+pydantic>=2.9,<3.0
+pydantic-settings>=2.6,<3.0
