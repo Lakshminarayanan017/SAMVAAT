@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  # ── The gate that matters ───────────────────────────────────────────────────
+  # Runs first and everything else depends on it. If the contracts are broken or
+  # a ContentBlock excludes a persona, nothing downstream is worth testing.
+  contracts:
+    name: contracts · schema, drift and accessibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generated code matches the schemas
+        run: npm run contracts:check
+
+      - name: Schema, accessibility and gate self-test
+        run: npm run contracts:validate
+
+      - name: Typecheck
+        run: npm run typecheck -w @samvaad/contracts
+
+      # Consumed by the api job so both languages test the exact same artefact.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-contracts
+          path: packages/contracts/generated/
+          retention-days: 1
+
+  api:
+    name: api · lint and tests
+    runs-on: ubuntu-latest
+    needs: contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: apps/api/requirements-dev.txt
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-contracts
+          path: packages/contracts/generated/
+
+      - run: pip install -r requirements-dev.txt
+        working-directory: apps/api
+
+      - run: ruff check .
+        working-directory: apps/api
+
+      - name: Tests (includes cross-language contract round-trip)
+        run: pytest -q
+        working-directory: apps/api
+
+  speech:
+    name: speech · lint, tests and eval harness
+    runs-on: ubuntu-latest
+    needs: contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: services/speech/requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+        working-directory: services/speech
+
+      - run: ruff check .
+        working-directory: services/speech
+
+      - run: pytest -q
+        working-directory: services/speech
+
+      # The eval table every speech PR must include. Printed into the job summary
+      # so reviewers see it without checking out the branch.
+      - name: Speech eval
+        working-directory: services/speech
+        run: |
+          python -m eval.harness --set atypical >> "$GITHUB_STEP_SUMMARY"
+
+  # ── Ethics Charter enforcement ──────────────────────────────────────────────
+  # Rules that are cheap to check statically. The rest are enforced by the tests
+  # named beside each rule in docs/ETHICS_CHARTER.md.
+  ethics:
+    name: ethics · charter rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: E2 — the rubric exclusion list is present and unmodified
+        run: |
+          grep -q 'EXCLUDED DIMENSIONS' docs/ETHICS_CHARTER.md
+          for dimension in speech_rate articulation_quality gaze facial_affect \
+                           motor_stillness response_latency accent; do
+            grep -q "$dimension" docs/ETHICS_CHARTER.md \
+              || { echo "::error::excluded dimension '$dimension' missing from the charter"; exit 1; }
+          done
+
+      - name: Every charter rule names an enforcing test
+        run: |
+          missing=0
+          for rule in E1 E2 E3 E4 E5 E6 E7; do
+            grep -q "### $rule ·" docs/ETHICS_CHARTER.md \
+              || { echo "::error::rule $rule missing from the charter"; missing=1; }
+          done
+          exit $missing

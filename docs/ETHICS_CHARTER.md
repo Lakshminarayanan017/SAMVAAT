@@ -39,16 +39,35 @@ All scoring is **baseline-relative**: measured against the learner's own rolling
 
 ### E2 · The interview rubric may not grade any manifestation of disability
 
-The mock-interview scorer may grade **only** these six dimensions:
+This is the canonical list. It is read by CI and by `services/genai/rubric/`; changing it
+here changes the enforced behaviour, and nowhere else does.
 
-`content_relevance` · `structure_star` · `specificity` · `clarity_of_intent` ·
-`self_advocacy` · `role_alignment`
+```yaml
+# rubric-v1
+SCORED DIMENSIONS:      # the rubric may grade exactly these
+  - content_relevance
+  - structure_star
+  - specificity
+  - clarity_of_intent
+  - self_advocacy
+  - role_alignment
 
-It is forbidden from grading any of these:
-
-`speech_rate` · `articulation_quality` · `fluency` · `disfluency` · `accent` · `voice_quality` ·
-`gaze` · `eye_contact` · `facial_affect` · `body_posture` · `motor_stillness` ·
-`response_latency` · `grammatical_perfection` · `vocabulary_sophistication`
+EXCLUDED DIMENSIONS:    # the rubric MUST NOT grade any of these
+  - speech_rate
+  - articulation_quality
+  - fluency
+  - disfluency
+  - accent
+  - voice_quality
+  - gaze
+  - eye_contact
+  - facial_affect
+  - body_posture
+  - motor_stillness
+  - response_latency
+  - grammatical_perfection
+  - vocabulary_sophistication
+```
 
 Enforcement is architectural, in four independent layers:
 
