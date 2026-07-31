@@ -218,6 +218,27 @@ class TestArtefactContract:
         and the rarest is `block` — the event P5 most needs recognised."""
         assert "'thresholds': thresholds" in self._notebook_source()
 
+    def test_the_notebook_records_which_classes_are_trustworthy(self) -> None:
+        """The training run applies a precision floor and marks classes that
+        cannot reach it. The serving loader has to read that flag — a safeguard
+        recorded in metrics.json and ignored by the server does not exist."""
+        source = self._notebook_source()
+
+        assert "'trustworthy'" in source
+        assert "per_class" in source
+
+    def test_an_untrustworthy_class_is_never_surfaced(self) -> None:
+        """Telling someone who stammers that they blocked, wrongly, five times
+        out of six is worse than saying nothing at all."""
+        import inspect
+
+        from pipeline.disfluency import DisfluencyModel
+
+        source = inspect.getsource(DisfluencyModel.detect)
+        assert "trustworthy" in source, (
+            "detect() must skip classes below the training precision floor"
+        )
+
     def test_capability_is_false_without_the_artefacts(self) -> None:
         """Honest by default on a fresh clone. Claiming the capability without
         the weights would show a learner invented cues about speech nobody

@@ -406,14 +406,35 @@ class DisfluencyModel:
         # logged rather than silent.
         self.thresholds = dict.fromkeys(LABELS, default_threshold)
 
+        # Which classes cleared the precision floor during training.
+        #
+        # The training run marks a class untrustworthy when it cannot reach
+        # >= 0.40 precision, and an untrustworthy class must not reach a learner:
+        # telling someone who stammers that they blocked, wrongly, five times out
+        # of six is worse than saying nothing at all. That decision is made
+        # during training and ENFORCED HERE — a flag recorded in metrics.json and
+        # ignored by the server is a safeguard that does not exist.
+        #
+        # Absent flag means trustworthy, so an older artefact predating the
+        # precision floor still loads and behaves as it did.
+        self.trustworthy = dict.fromkeys(LABELS, True)
+
         metrics_path = artifacts_dir / METRICS_FILE
         if metrics_path.exists():
             try:
-                tuned = json.loads(metrics_path.read_text(encoding="utf-8")).get("thresholds")
+                metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+
+                tuned = metrics.get("thresholds")
                 if isinstance(tuned, dict):
                     self.thresholds.update(
                         {label: float(value) for label, value in tuned.items() if label in LABELS}
                     )
+
+                for row in metrics.get("per_class") or []:
+                    label = row.get("event")
+                    if label in LABELS and "trustworthy" in row:
+                        self.trustworthy[label] = bool(row["trustworthy"])
+
             except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
                 log.warning(
                     "could not read tuned thresholds (%s); using %s",
@@ -426,6 +447,14 @@ class DisfluencyModel:
                 "types, which under-detects the rare ones",
                 metrics_path,
                 default_threshold,
+            )
+
+        suppressed = [label for label, ok in self.trustworthy.items() if not ok]
+        if suppressed:
+            log.info(
+                "not surfacing %s: below the training precision floor, so a cue would "
+                "be wrong more often than right",
+                ", ".join(suppressed),
             )
 
     def predict_window(self, samples: np.ndarray) -> dict[str, float]:
@@ -449,6 +478,10 @@ class DisfluencyModel:
 
         for offset, window in windows(samples, sample_rate):
             for label, probability in self.predict_window(window).items():
+                # A class the training run could not make precise enough is not
+                # surfaced at all. Fewer cues, but believable ones.
+                if not self.trustworthy.get(label, True):
+                    continue
                 if probability < self.thresholds[label]:
                     continue
 
