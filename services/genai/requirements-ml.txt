@@ -1,0 +1,14 @@
+# Semantic retrieval. OPTIONAL.
+#
+#   pip install -r requirements-ml.txt
+#
+# Roughly 400 MB with the model weights. Without it, retrieval falls back to an
+# IDF-weighted keyword match over the hand-applied intent and scenario tags,
+# which on a curated 226-phrase corpus is genuinely close in quality.
+#
+# Install this when retrieval quality is measurably limiting role-play, not
+# before — the eval suite in eval/ is what tells you.
+
+-r requirements.txt
+
+sentence-transformers>=3.0,<4.0

@@ -1,0 +1,19 @@
+# SAMVAAD GenAI service — runtime dependencies
+#
+# Deliberately light. The one heavy optional piece is sentence-transformers, and
+# the service runs a keyword retrieval path without it — which is well suited to
+# a hand-tagged corpus of 226 phrases.
+
+fastapi>=0.115,<0.116
+uvicorn[standard]>=0.32,<0.33
+pydantic>=2.9,<3.0
+pydantic-settings>=2.6,<3.0
+httpx>=0.27,<0.29
+
+# Structured logging, request tracing, redaction, service auth and rate limiting,
+# shared with the api and speech services.
+-e ../../packages/platform
+
+# The LLM provider. Optional at runtime: with no key the service serves authored
+# content and every feature still works.
+anthropic>=0.40,<1.0
