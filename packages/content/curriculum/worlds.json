@@ -1,0 +1,281 @@
+{
+  "version": 1,
+  "note": "The learning journey. Ten worlds, each a real communication capability rather than a topic heading. Levels never hard-list phrase ids - they name a category and a slice, and the build resolves them against the real phrase bank so the curriculum cannot drift from the corpus. A level referencing a category that does not exist fails CI.",
+
+  "mission_types": {
+    "recognise": { "label": "Match it", "effort": 1, "note": "Meaning to phrase. Lowest floor - works for every profile, and it is how a level opens." },
+    "produce": { "label": "Say it your way", "effort": 3, "note": "Produce the phrase through whatever channel the learner uses. Speech, typing, signing, symbols, switch." },
+    "choose_in_context": { "label": "What fits here", "effort": 2, "note": "A situation, three phrases, one that fits. This is the puzzle mechanic." },
+    "order_the_steps": { "label": "Put it in order", "effort": 2, "note": "Sequence a short exchange. Tests structure rather than recall." },
+    "scenario": { "label": "Live it", "effort": 4, "note": "A branching situation. Choices change what happens next." },
+    "roleplay": { "label": "Talk it through", "effort": 5, "note": "Multi-turn conversation with the AI colleague, grounded in this world's phrases." },
+    "interview": { "label": "The real thing", "effort": 6, "note": "Mock interview. Only appears in World 10." },
+    "boss": { "label": "Show what you can do", "effort": 5, "note": "Mixed challenge closing a chapter. Draws from everything in it." }
+  },
+
+  "worlds": [
+    {
+      "id": "w01_finding_your_voice",
+      "order": 1,
+      "title": "Finding Your Voice",
+      "subtitle": "Saying hello, and saying who you are",
+      "easy_read_title": "Saying hello",
+      "why": "Every workplace conversation starts here. Getting the first ten seconds right changes the whole day.",
+      "colour": "dawn",
+      "icon": "sunrise",
+      "chapters": [
+        {
+          "id": "c01_hello",
+          "title": "Hello",
+          "levels": [
+            { "id": "l1", "title": "First words", "source": { "category": "greetings", "from": 0, "count": 5 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Your name, your team", "source": { "category": "greetings", "from": 5, "count": 5 }, "missions": ["recognise", "choose_in_context", "produce"] },
+            { "id": "l3", "title": "Meeting someone new", "source": { "category": "greetings", "from": 10, "count": 8 }, "missions": ["choose_in_context", "produce", "scenario"] },
+            { "id": "l4", "title": "Your first morning", "source": { "category": "greetings", "from": 0, "count": 18 }, "missions": ["boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w02_making_sure",
+      "order": 2,
+      "title": "Making Sure You Understand",
+      "subtitle": "Asking again is a skill, not a failure",
+      "easy_read_title": "Asking again",
+      "why": "Most workplace mistakes start with an instruction nobody checked. Asking is the fix, and it is allowed.",
+      "colour": "sky",
+      "icon": "question",
+      "chapters": [
+        {
+          "id": "c01_ask_again",
+          "title": "Ask again",
+          "levels": [
+            { "id": "l1", "title": "Say you did not hear", "source": { "category": "clarification", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Ask for it slower", "source": { "category": "clarification", "from": 6, "count": 6 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "Ask for it in writing", "source": { "category": "clarification", "from": 12, "count": 8 }, "missions": ["choose_in_context", "produce", "scenario"] },
+            { "id": "l4", "title": "A noisy shop floor", "source": { "category": "clarification", "from": 0, "count": 20 }, "missions": ["roleplay", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w03_where_you_are",
+      "order": 3,
+      "title": "Saying Where You Are",
+      "subtitle": "Progress, honestly, including when it is behind",
+      "easy_read_title": "Telling people about your work",
+      "why": "Telling someone early that you are behind is the difference between a problem and a crisis.",
+      "colour": "meadow",
+      "icon": "path",
+      "chapters": [
+        {
+          "id": "c01_progress",
+          "title": "How it is going",
+          "levels": [
+            { "id": "l1", "title": "Work you finished", "source": { "category": "progress", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Work still going", "source": { "category": "progress", "from": 6, "count": 6 }, "missions": ["choose_in_context", "order_the_steps", "produce"] },
+            { "id": "l3", "title": "Running behind", "source": { "category": "progress", "from": 12, "count": 6 }, "missions": ["choose_in_context", "produce", "scenario"] },
+            { "id": "l4", "title": "The morning check-in", "source": { "category": "progress", "from": 0, "count": 18 }, "missions": ["roleplay", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w04_asking_for_help",
+      "order": 4,
+      "title": "Asking For What You Need",
+      "subtitle": "Getting help without apologising for it",
+      "easy_read_title": "Asking for help",
+      "why": "Nobody learns a job without asking. The people who ask early are the people who get good fastest.",
+      "colour": "amber",
+      "icon": "hand",
+      "chapters": [
+        {
+          "id": "c01_help",
+          "title": "Asking",
+          "levels": [
+            { "id": "l1", "title": "Show me once more", "source": { "category": "requesting_help", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "I am stuck", "source": { "category": "requesting_help", "from": 6, "count": 5 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "Asking the right person", "source": { "category": "requesting_help", "from": 11, "count": 5 }, "missions": ["choose_in_context", "scenario"] },
+            { "id": "l4", "title": "A machine you do not know", "source": { "category": "requesting_help", "from": 0, "count": 16 }, "missions": ["roleplay", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w05_speaking_up",
+      "order": 5,
+      "title": "Speaking Up For Yourself",
+      "subtitle": "Asking for what helps you work",
+      "easy_read_title": "Saying what helps you",
+      "why": "This is the world no other app teaches. Asking for an adjustment is a skill, it is your right, and it can be practised.",
+      "colour": "violet",
+      "icon": "shield",
+      "flagship": true,
+      "chapters": [
+        {
+          "id": "c01_adjustments",
+          "title": "What helps you",
+          "levels": [
+            { "id": "l1", "title": "Naming what helps", "source": { "category": "leave_and_adjustments", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Asking for time", "source": { "category": "leave_and_adjustments", "from": 6, "count": 6 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "Asking for a change", "source": { "category": "leave_and_adjustments", "from": 12, "count": 6 }, "missions": ["choose_in_context", "produce", "scenario"] }
+          ]
+        },
+        {
+          "id": "c02_disclosure",
+          "title": "How much to say",
+          "sensitive": true,
+          "levels": [
+            { "id": "l1", "title": "Your words, your choice", "source": { "category": "self_advocacy", "from": 0, "count": 6 }, "missions": ["recognise", "choose_in_context"] },
+            { "id": "l2", "title": "Saying it your way", "source": { "category": "self_advocacy", "from": 6, "count": 6 }, "missions": ["produce", "scenario"] },
+            { "id": "l3", "title": "If it goes badly", "source": { "category": "self_advocacy", "from": 0, "count": 12 }, "missions": ["scenario", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w06_disagreement",
+      "order": 6,
+      "title": "Handling Disagreement",
+      "subtitle": "Saying no, and hearing it",
+      "easy_read_title": "When people do not agree",
+      "why": "Disagreeing well is what separates a colleague from a problem. It is almost entirely phrasing.",
+      "colour": "coral",
+      "icon": "balance",
+      "chapters": [
+        {
+          "id": "c01_disagree",
+          "title": "Seeing it differently",
+          "levels": [
+            { "id": "l1", "title": "A different view", "source": { "category": "disagreeing", "from": 0, "count": 5 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Explaining why", "source": { "category": "disagreeing", "from": 5, "count": 5 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "Finding the middle", "source": { "category": "disagreeing", "from": 10, "count": 4 }, "missions": ["scenario"] }
+          ]
+        },
+        {
+          "id": "c02_feedback",
+          "title": "Feedback, both ways",
+          "levels": [
+            { "id": "l1", "title": "Taking it well", "source": { "category": "feedback", "from": 0, "count": 5 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Asking what to change", "source": { "category": "feedback", "from": 5, "count": 5 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "Being told to improve", "source": { "category": "feedback", "from": 0, "count": 14 }, "missions": ["roleplay", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w07_phone_and_writing",
+      "order": 7,
+      "title": "On The Phone And In Writing",
+      "subtitle": "Communicating with no face to read",
+      "easy_read_title": "Phone calls and messages",
+      "why": "No expressions, no gestures, no lip reading. Everything has to be in the words, which makes this the hardest channel and the most teachable.",
+      "colour": "teal",
+      "icon": "signal",
+      "chapters": [
+        {
+          "id": "c01_phone",
+          "title": "On the phone",
+          "levels": [
+            { "id": "l1", "title": "Answering", "source": { "category": "telephone", "from": 0, "count": 5 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Taking a message", "source": { "category": "telephone", "from": 5, "count": 5 }, "missions": ["order_the_steps", "produce"] },
+            { "id": "l3", "title": "A bad line", "source": { "category": "telephone", "from": 10, "count": 4 }, "missions": ["scenario", "roleplay"] }
+          ]
+        },
+        {
+          "id": "c02_writing",
+          "title": "In writing",
+          "levels": [
+            { "id": "l1", "title": "Short and clear", "source": { "category": "written", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Asking in a message", "source": { "category": "written", "from": 6, "count": 5 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "A whole email", "source": { "category": "written", "from": 0, "count": 16 }, "missions": ["order_the_steps", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w08_in_the_room",
+      "order": 8,
+      "title": "In The Room",
+      "subtitle": "Meetings, and the bits around them",
+      "easy_read_title": "Meetings and talking with people",
+      "why": "Belonging at work is mostly built in the two minutes before a meeting starts, not in the meeting.",
+      "colour": "indigo",
+      "icon": "circle-group",
+      "chapters": [
+        {
+          "id": "c01_meetings",
+          "title": "In the meeting",
+          "levels": [
+            { "id": "l1", "title": "Your update", "source": { "category": "meetings", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Adding a point", "source": { "category": "meetings", "from": 6, "count": 5 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "The morning standup", "source": { "category": "meetings", "from": 0, "count": 16 }, "missions": ["roleplay", "boss"] }
+          ]
+        },
+        {
+          "id": "c02_small_talk",
+          "title": "Around the edges",
+          "levels": [
+            { "id": "l1", "title": "How was your weekend", "source": { "category": "small_talk", "from": 0, "count": 5 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Keeping it going", "source": { "category": "small_talk", "from": 5, "count": 5 }, "missions": ["choose_in_context", "scenario"] },
+            { "id": "l3", "title": "The lunch room", "source": { "category": "small_talk", "from": 0, "count": 14 }, "missions": ["roleplay", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w09_when_it_matters",
+      "order": 9,
+      "title": "When It Matters",
+      "subtitle": "Safety, and speaking up fast",
+      "easy_read_title": "When something is wrong",
+      "why": "The one place where hesitating is genuinely dangerous. These phrases are worth knowing cold.",
+      "colour": "ember",
+      "icon": "alert",
+      "chapters": [
+        {
+          "id": "c01_safety",
+          "title": "Something is wrong",
+          "levels": [
+            { "id": "l1", "title": "Stop and say", "source": { "category": "safety", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Reporting it", "source": { "category": "safety", "from": 6, "count": 5 }, "missions": ["order_the_steps", "produce"] },
+            { "id": "l3", "title": "Escalating", "source": { "category": "safety", "from": 11, "count": 5 }, "missions": ["choose_in_context", "scenario"] },
+            { "id": "l4", "title": "A machine that is not safe", "source": { "category": "safety", "from": 0, "count": 16 }, "missions": ["roleplay", "boss"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w10_the_interview",
+      "order": 10,
+      "title": "The Interview",
+      "subtitle": "Everything you have learned, in one room",
+      "easy_read_title": "Job interviews",
+      "why": "The room where being qualified is not enough. This is what the whole journey has been for.",
+      "colour": "gold",
+      "icon": "door",
+      "flagship": true,
+      "chapters": [
+        {
+          "id": "c01_answers",
+          "title": "Your answers",
+          "levels": [
+            { "id": "l1", "title": "Telling them about you", "source": { "category": "interview", "from": 0, "count": 6 }, "missions": ["recognise", "produce"] },
+            { "id": "l2", "title": "Your strengths", "source": { "category": "interview", "from": 6, "count": 7 }, "missions": ["choose_in_context", "produce"] },
+            { "id": "l3", "title": "A whole answer", "source": { "category": "interview", "from": 13, "count": 7 }, "missions": ["order_the_steps", "produce", "scenario"] }
+          ]
+        },
+        {
+          "id": "c02_the_room",
+          "title": "The room",
+          "levels": [
+            { "id": "l1", "title": "A practice interview", "source": { "category": "interview", "from": 0, "count": 20 }, "missions": ["interview"] },
+            { "id": "l2", "title": "The telephone screen", "source": { "category": "telephone", "from": 0, "count": 14 }, "missions": ["interview"] },
+            { "id": "l3", "title": "The whole thing", "source": { "category": "interview", "from": 0, "count": 20 }, "missions": ["interview", "boss"] }
+          ]
+        }
+      ]
+    }
+  ]
+}

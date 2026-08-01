@@ -6,10 +6,12 @@
   "description": "The Workplace Language Bank — 226 curated workplace phrases, authored compactly and expanded into ContentBlocks.",
   "exports": {
     ".": "./dist/blocks.json",
-    "./index": "./dist/index.json"
+    "./index": "./dist/index.json",
+    "./curriculum": "./dist/curriculum.json",
+    "./profiles": "./dist/profiles.json"
   },
   "scripts": {
-    "build": "node src/build.mjs",
+    "build": "node src/build.mjs && node src/curriculum.mjs",
     "validate": "node src/validate.mjs",
     "test": "node src/validate.mjs"
   },

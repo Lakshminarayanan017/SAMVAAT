@@ -1,0 +1,309 @@
+{
+  "version": 1,
+  "note": "Learning profiles. THESE ARE NOT DIAGNOSES AND ARE NEVER STORED AS ONE. A profile is a preset: pick the one that sounds like you, and it configures channels, mission mix, difficulty, coaching strategies and scoring weights all at once. Every setting it applies stays individually changeable afterwards, and 'prefer not to say' is a first-class answer that lands on the widest-compatibility preset. See ADR-0001: the runtime mechanism is channels, not conditions - a profile only chooses a starting point.",
+
+  "principles": [
+    "A profile changes what the learner DOES, not what the screen is called. If a preset only changed labels it would not be here.",
+    "Every preset is reversible from Settings in two actions, from anywhere.",
+    "No preset removes a world. Reordering and re-weighting, never removal - deciding somebody cannot learn interviews because of their disability is the exact harm this product exists to refuse.",
+    "The learner is never asked to prove or name a condition."
+  ],
+
+  "profiles": [
+    {
+      "id": "prefer_not_to_say",
+      "order": 0,
+      "label": "I would rather not say",
+      "easy_read_label": "I do not want to say",
+      "blurb": "Everything on, nothing assumed. You can change any of it later.",
+      "channels": {
+        "input": ["text", "speech", "aac", "switch"],
+        "output": ["captioned_text", "audio"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 44 },
+      "session_minutes": 5,
+      "mission_weights": { "recognise": 1, "produce": 1, "choose_in_context": 1, "order_the_steps": 1, "scenario": 1, "roleplay": 1 },
+      "difficulty_start": 2,
+      "strategies": [],
+      "scoring_weights": { "intelligibility": 0.3, "pronunciation": 0.2, "pace": 0.15, "fluency": 0.15, "confidence": 0.2 }
+    },
+
+    {
+      "id": "deaf_hard_of_hearing",
+      "order": 1,
+      "label": "I am Deaf or hard of hearing",
+      "easy_read_label": "I do not hear, or I hear a little",
+      "blurb": "Captions and sign throughout. Nothing depends on hearing anything.",
+      "channels": {
+        "input": ["text", "sign", "aac"],
+        "output": ["captioned_text", "isl"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 44 },
+      "session_minutes": 6,
+      "mission_weights": { "recognise": 1.2, "produce": 1, "choose_in_context": 1.2, "order_the_steps": 1, "scenario": 1.2, "roleplay": 1 },
+      "world_emphasis": ["w02_making_sure", "w07_phone_and_writing", "w05_speaking_up"],
+      "difficulty_start": 2,
+      "strategies": ["ask_to_face_me", "ask_in_writing", "confirm_back", "seat_yourself_to_see"],
+      "scoring_weights": { "intelligibility": 0.35, "pronunciation": 0.05, "pace": 0.1, "fluency": 0.1, "confidence": 0.4 },
+      "notes": "Pronunciation is down-weighted to almost nothing rather than removed: a Deaf learner who chooses to use speech should still see their own trend, and a learner who does not never generates the dimension at all. Phone and writing are emphasised because that is where the barrier actually bites."
+    },
+
+    {
+      "id": "non_speaking",
+      "order": 2,
+      "label": "I do not use speech",
+      "easy_read_label": "I do not talk out loud",
+      "blurb": "Symbols and typing everywhere. No activity ever requires your voice.",
+      "channels": {
+        "input": ["aac", "text", "switch"],
+        "output": ["captioned_text", "pictograph"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 56 },
+      "session_minutes": 8,
+      "mission_weights": { "recognise": 1.2, "produce": 1, "choose_in_context": 1.3, "order_the_steps": 1.2, "scenario": 1.2, "roleplay": 1 },
+      "difficulty_start": 2,
+      "strategies": ["compose_ahead", "phrase_bank_shortcut", "ask_for_response_time", "written_introduction"],
+      "scoring_weights": { "intelligibility": 0.4, "pronunciation": 0.0, "pace": 0.0, "fluency": 0.0, "confidence": 0.6 },
+      "notes": "Session minutes are longer because AAC composition genuinely takes longer - the learner asked for a session length, not a word count, and giving them the same item count would hand them a session twice as long as they asked for."
+    },
+
+    {
+      "id": "stammer",
+      "order": 3,
+      "label": "I stammer",
+      "easy_read_label": "Sometimes my words get stuck",
+      "blurb": "Never timed, never scored on fluency. Coaching from real speech therapy strategies.",
+      "channels": {
+        "input": ["speech", "text"],
+        "output": ["captioned_text", "audio"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 44 },
+      "session_minutes": 6,
+      "mission_weights": { "recognise": 0.8, "produce": 1.2, "choose_in_context": 1, "order_the_steps": 0.8, "scenario": 1.2, "roleplay": 1.3 },
+      "world_emphasis": ["w01_finding_your_voice", "w07_phone_and_writing", "w10_the_interview"],
+      "difficulty_start": 2,
+      "strategies": ["easy_onset", "light_contact", "pull_out", "pausing", "breath_support", "voluntary_disclosure"],
+      "scoring_weights": { "intelligibility": 0.4, "pronunciation": 0.15, "pace": 0.1, "fluency": 0.05, "confidence": 0.3 },
+      "notes": "Fluency is weighted 0.05, not 0. Removing it entirely would hide a real trend the learner may want to see; weighting it near zero means a bad block week cannot move the composite. Telephone is emphasised because it is the single most avoided situation."
+    },
+
+    {
+      "id": "blind",
+      "order": 4,
+      "label": "I am blind",
+      "easy_read_label": "I do not see the screen",
+      "blurb": "Built for a screen reader. Audio-first, and every visual has a spoken equal.",
+      "channels": {
+        "input": ["speech", "text"],
+        "output": ["audio", "captioned_text"]
+      },
+      "presentation": { "captions_enabled": false, "one_step_per_screen": false, "target_size_px": 44, "motion_reduced": true },
+      "session_minutes": 5,
+      "mission_weights": { "recognise": 1, "produce": 1.2, "choose_in_context": 1, "order_the_steps": 0.6, "scenario": 1.2, "roleplay": 1.3 },
+      "difficulty_start": 2,
+      "strategies": ["state_your_name_first", "ask_who_is_here", "request_verbal_agenda", "confirm_back"],
+      "scoring_weights": { "intelligibility": 0.35, "pronunciation": 0.2, "pace": 0.1, "fluency": 0.15, "confidence": 0.2 },
+      "notes": "order_the_steps is down-weighted rather than removed - drag ordering is the hardest mission to make good with a screen reader, so it appears less often and always with a keyboard reorder path."
+    },
+
+    {
+      "id": "low_vision",
+      "order": 5,
+      "label": "I have low vision",
+      "easy_read_label": "I see a little",
+      "blurb": "High contrast, large targets, and audio alongside everything.",
+      "channels": {
+        "input": ["speech", "text"],
+        "output": ["captioned_text", "audio"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 64, "contrast_theme": "high_contrast" },
+      "session_minutes": 5,
+      "mission_weights": { "recognise": 1, "produce": 1, "choose_in_context": 1, "order_the_steps": 0.8, "scenario": 1, "roleplay": 1 },
+      "difficulty_start": 2,
+      "strategies": ["ask_for_larger_print", "ask_to_read_it_aloud", "request_good_lighting", "confirm_back"],
+      "scoring_weights": { "intelligibility": 0.3, "pronunciation": 0.2, "pace": 0.15, "fluency": 0.15, "confidence": 0.2 }
+    },
+
+    {
+      "id": "autistic",
+      "order": 6,
+      "label": "I am autistic",
+      "easy_read_label": "I am autistic",
+      "blurb": "Predictable structure, literal wording, and every social rule stated instead of implied.",
+      "channels": {
+        "input": ["text", "speech", "aac"],
+        "output": ["captioned_text", "easy_read"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 44, "motion_reduced": true },
+      "session_minutes": 6,
+      "mission_weights": { "recognise": 1, "produce": 1, "choose_in_context": 1.4, "order_the_steps": 1.2, "scenario": 1.4, "roleplay": 1.1 },
+      "world_emphasis": ["w08_in_the_room", "w06_disagreement", "w05_speaking_up"],
+      "difficulty_start": 2,
+      "strategies": ["say_what_you_mean", "ask_for_the_rule", "script_the_opening", "name_the_ambiguity", "agree_a_signal"],
+      "scoring_weights": { "intelligibility": 0.35, "pronunciation": 0.1, "pace": 0.1, "fluency": 0.1, "confidence": 0.35 },
+      "notes": "choose_in_context and scenario are up-weighted hard. The gap is rarely vocabulary - it is which of several correct-sounding phrases the room expects, and that is exactly what those two missions drill. Motion reduced by default, changeable."
+    },
+
+    {
+      "id": "intellectual_disability",
+      "order": 7,
+      "label": "I learn best with simple words",
+      "easy_read_label": "I like easy words and pictures",
+      "blurb": "One thing on the screen at a time. Pictures with every idea, and nothing rushed.",
+      "channels": {
+        "input": ["aac", "text", "speech"],
+        "output": ["easy_read", "pictograph", "audio"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": true, "target_size_px": 64, "audio_rate": 0.85 },
+      "session_minutes": 4,
+      "mission_weights": { "recognise": 1.5, "produce": 1, "choose_in_context": 1.2, "order_the_steps": 0.7, "scenario": 1, "roleplay": 0.7 },
+      "difficulty_start": 1,
+      "difficulty_ceiling": 3,
+      "strategies": ["one_thing_at_a_time", "ask_for_a_picture", "repeat_it_back", "ask_someone_to_show_me"],
+      "scoring_weights": { "intelligibility": 0.4, "pronunciation": 0.1, "pace": 0.05, "fluency": 0.05, "confidence": 0.4 },
+      "notes": "difficulty_ceiling is a pacing choice, not a limit on the learner: the ceiling lifts automatically once a world is mastered, and a trainer can lift it at any time. Sessions are short because a four-minute session finished beats an eight-minute session abandoned."
+    },
+
+    {
+      "id": "dyslexia",
+      "order": 8,
+      "label": "Reading is hard for me",
+      "easy_read_label": "Reading is hard for me",
+      "blurb": "Audio with every piece of text, and never a wall of words.",
+      "channels": {
+        "input": ["speech", "aac", "text"],
+        "output": ["audio", "easy_read", "captioned_text"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 48 },
+      "session_minutes": 5,
+      "mission_weights": { "recognise": 1, "produce": 1.2, "choose_in_context": 1, "order_the_steps": 0.7, "scenario": 1.2, "roleplay": 1.2 },
+      "world_emphasis": ["w07_phone_and_writing"],
+      "difficulty_start": 2,
+      "strategies": ["ask_to_read_it_aloud", "ask_for_extra_reading_time", "use_a_template", "check_it_back"],
+      "scoring_weights": { "intelligibility": 0.35, "pronunciation": 0.15, "pace": 0.1, "fluency": 0.15, "confidence": 0.25 }
+    },
+
+    {
+      "id": "aphasia",
+      "order": 9,
+      "label": "I have trouble finding words",
+      "easy_read_label": "Words are hard to find",
+      "blurb": "Never rushed, always a symbol to point at, and the word is always offered before it is asked for.",
+      "channels": {
+        "input": ["aac", "speech", "text"],
+        "output": ["pictograph", "easy_read", "audio"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": true, "target_size_px": 64, "audio_rate": 0.9 },
+      "session_minutes": 5,
+      "mission_weights": { "recognise": 1.6, "produce": 1, "choose_in_context": 1.2, "order_the_steps": 0.5, "scenario": 0.9, "roleplay": 0.8 },
+      "difficulty_start": 1,
+      "strategies": ["point_to_it", "describe_around_it", "ask_for_a_choice", "take_the_time_you_need", "write_the_first_letter"],
+      "scoring_weights": { "intelligibility": 0.45, "pronunciation": 0.05, "pace": 0.0, "fluency": 0.05, "confidence": 0.45 },
+      "notes": "recognise is weighted highest of any profile. Recognition is reliably preserved when retrieval is not, so a session that opens with recognition opens with a success - and word-finding recovers faster from confidence than from drilling."
+    },
+
+    {
+      "id": "stroke_recovery",
+      "order": 10,
+      "label": "I am recovering from a stroke",
+      "easy_read_label": "I had a stroke. I am getting better.",
+      "blurb": "Short sessions, gentle pace, and progress measured against last week rather than last year.",
+      "channels": {
+        "input": ["speech", "aac", "text"],
+        "output": ["captioned_text", "audio", "pictograph"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": true, "target_size_px": 56, "audio_rate": 0.9 },
+      "session_minutes": 4,
+      "mission_weights": { "recognise": 1.4, "produce": 1.1, "choose_in_context": 1, "order_the_steps": 0.7, "scenario": 0.9, "roleplay": 0.9 },
+      "difficulty_start": 1,
+      "strategies": ["take_the_time_you_need", "point_to_it", "one_thing_at_a_time", "rest_and_return", "repeat_it_back"],
+      "scoring_weights": { "intelligibility": 0.4, "pronunciation": 0.1, "pace": 0.05, "fluency": 0.1, "confidence": 0.35 },
+      "notes": "Recovery is not linear and a fortnight can go backwards for medical reasons. The baseline window is shortened for this profile so the index tracks the current phase rather than dragging a pre-stroke or early-recovery figure behind it."
+    },
+
+    {
+      "id": "cerebral_palsy",
+      "order": 11,
+      "label": "I have cerebral palsy",
+      "easy_read_label": "My body moves differently",
+      "blurb": "Large targets, switch-ready, and nothing anywhere is timed.",
+      "channels": {
+        "input": ["speech", "switch", "aac", "text"],
+        "output": ["captioned_text", "audio"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 72 },
+      "interaction": { "switch_scanning": { "enabled": true, "switch_count": 2, "dwell_ms": 1500, "scan_mode": "row_column" } },
+      "session_minutes": 8,
+      "mission_weights": { "recognise": 1.2, "produce": 1, "choose_in_context": 1.2, "order_the_steps": 0.5, "scenario": 1.1, "roleplay": 1 },
+      "difficulty_start": 2,
+      "strategies": ["take_the_time_you_need", "ask_for_response_time", "compose_ahead", "ask_someone_to_wait"],
+      "scoring_weights": { "intelligibility": 0.4, "pronunciation": 0.1, "pace": 0.0, "fluency": 0.1, "confidence": 0.4 },
+      "notes": "pace weighted 0. Speaking rate in dysarthria is motor function, not skill - see ADR-0006. Switch scanning is on by default for this preset and turned off in one action if the learner does not use one."
+    },
+
+    {
+      "id": "communication_anxiety",
+      "order": 12,
+      "label": "Talking at work makes me anxious",
+      "easy_read_label": "Talking to people makes me worried",
+      "blurb": "Start small, rehearse before it is real, and stop whenever you want.",
+      "channels": {
+        "input": ["text", "speech"],
+        "output": ["captioned_text", "audio"]
+      },
+      "presentation": { "captions_enabled": true, "one_step_per_screen": false, "target_size_px": 44 },
+      "session_minutes": 4,
+      "mission_weights": { "recognise": 1, "produce": 1.1, "choose_in_context": 1.1, "order_the_steps": 0.9, "scenario": 1.3, "roleplay": 1.4 },
+      "world_emphasis": ["w01_finding_your_voice", "w08_in_the_room", "w10_the_interview"],
+      "difficulty_start": 1,
+      "strategies": ["script_the_opening", "rehearse_it_first", "start_with_one_person", "breath_support", "you_can_stop_anytime"],
+      "scoring_weights": { "intelligibility": 0.3, "pronunciation": 0.1, "pace": 0.1, "fluency": 0.1, "confidence": 0.4 },
+      "notes": "roleplay is the most weighted mission here, which looks backwards until you notice the mechanism: avoidance is the maintaining factor in communication anxiety, and graded rehearsal in a place with no consequences is the intervention. Difficulty starts low and every scenario has a visible exit."
+    }
+  ],
+
+  "strategies": {
+    "easy_onset": { "label": "Easy onset", "text": "Try starting that word gently, letting the air move before the sound.", "source": "stuttering modification" },
+    "light_contact": { "label": "Light contact", "text": "Try touching your lips and tongue lightly on that sound.", "source": "fluency shaping" },
+    "pull_out": { "label": "Easing out", "text": "If a sound repeats, try easing out of it slowly rather than pushing through.", "source": "stuttering modification" },
+    "pausing": { "label": "Pausing", "text": "A silent pause works just as well as a filler word, and sounds confident.", "source": "fluency shaping" },
+    "breath_support": { "label": "Breath", "text": "Try taking a breath before you start, and letting the sentence ride out on it.", "source": "fluency shaping" },
+    "voluntary_disclosure": { "label": "Saying it first", "text": "Some people find it easier to say 'I stammer, so give me a second' at the start. It is your choice, and it often relaxes the room.", "source": "self-advocacy" },
+    "ask_to_face_me": { "label": "Ask them to face you", "text": "Try: \"Could you face me when you speak? It helps me follow.\"", "source": "access" },
+    "ask_in_writing": { "label": "Ask for it in writing", "text": "Try: \"Could you send me that in a message?\"", "source": "access" },
+    "seat_yourself_to_see": { "label": "Where you sit", "text": "In a meeting, a seat where you can see everyone's face does more than any technology.", "source": "access" },
+    "confirm_back": { "label": "Say it back", "text": "Repeat the instruction in your own words. It catches problems before they cost anything.", "source": "comprehension" },
+    "compose_ahead": { "label": "Write it before", "text": "You can build your answer before the conversation starts. Nobody is waiting.", "source": "AAC practice" },
+    "phrase_bank_shortcut": { "label": "Keep it ready", "text": "Save the phrases you use most. Fast to reach beats perfect to build.", "source": "AAC practice" },
+    "ask_for_response_time": { "label": "Ask them to wait", "text": "Try: \"Give me a moment - I am putting it together.\"", "source": "AAC practice" },
+    "written_introduction": { "label": "Introduce yourself once", "text": "A short saved introduction saves explaining yourself every single time.", "source": "AAC practice" },
+    "state_your_name_first": { "label": "Name first", "text": "Saying \"It's Ravi\" before you speak saves everyone guessing.", "source": "access" },
+    "ask_who_is_here": { "label": "Who is in the room", "text": "Try: \"Could we go round and say who's here?\"", "source": "access" },
+    "request_verbal_agenda": { "label": "Ask what is coming", "text": "Try: \"Could you tell me what we're covering?\"", "source": "access" },
+    "ask_for_larger_print": { "label": "Ask for bigger", "text": "Try: \"Could I have that in a larger size?\"", "source": "access" },
+    "ask_to_read_it_aloud": { "label": "Ask them to read it", "text": "Try: \"Could you read that out for me?\"", "source": "access" },
+    "request_good_lighting": { "label": "Ask about the light", "text": "Where you stand and where the light falls changes what you can see. It is fine to ask.", "source": "access" },
+    "say_what_you_mean": { "label": "Say it straight", "text": "Direct is not rude. \"I need this by Friday\" is clearer and kinder than hinting.", "source": "autistic-led practice" },
+    "ask_for_the_rule": { "label": "Ask what the rule is", "text": "Try: \"What's the usual way this is done here?\" Most rules are unwritten, and asking is allowed.", "source": "autistic-led practice" },
+    "script_the_opening": { "label": "Plan the first line", "text": "Having the first sentence ready carries you into the rest of it.", "source": "rehearsal" },
+    "name_the_ambiguity": { "label": "Name the fog", "text": "Try: \"I'm not sure if you mean today or this week - which is it?\"", "source": "autistic-led practice" },
+    "agree_a_signal": { "label": "Agree a signal", "text": "Agreeing a sign with one colleague for \"I need a minute\" costs nothing and helps a lot.", "source": "autistic-led practice" },
+    "one_thing_at_a_time": { "label": "One thing", "text": "Do the first step. Then the next. You do not need to hold all of it at once.", "source": "cognitive load" },
+    "ask_for_a_picture": { "label": "Ask for a picture", "text": "Try: \"Could you show me?\" Seeing it once beats hearing it three times.", "source": "cognitive load" },
+    "repeat_it_back": { "label": "Say it back", "text": "Saying it back in your words makes it stick, and shows you have it.", "source": "comprehension" },
+    "ask_someone_to_show_me": { "label": "Ask to be shown", "text": "Try: \"Could you show me once?\" That is a normal thing to ask on any job.", "source": "cognitive load" },
+    "ask_for_extra_reading_time": { "label": "Ask for time to read", "text": "Try: \"Give me a minute with this and I'll come back to you.\"", "source": "access" },
+    "use_a_template": { "label": "Start from a template", "text": "A saved shape for emails removes the hardest part, which is the blank page.", "source": "written practice" },
+    "check_it_back": { "label": "Read it once more", "text": "One pass before you send catches most of it.", "source": "written practice" },
+    "point_to_it": { "label": "Point", "text": "Pointing is communicating. It is not a lesser way of saying it.", "source": "aphasia practice" },
+    "describe_around_it": { "label": "Go round the word", "text": "If the word will not come, describe it. \"The thing for cutting\" gets you there.", "source": "aphasia practice" },
+    "ask_for_a_choice": { "label": "Ask for choices", "text": "Try: \"Give me two options and I'll pick.\" Choosing is easier than finding.", "source": "aphasia practice" },
+    "write_the_first_letter": { "label": "First letter", "text": "Writing or tracing the first letter often unlocks the whole word.", "source": "aphasia practice" },
+    "take_the_time_you_need": { "label": "Your own time", "text": "There is no clock here. There never will be.", "source": "pacing" },
+    "ask_someone_to_wait": { "label": "Ask them to hold on", "text": "Try: \"One moment.\" Two words buy you all the time you need.", "source": "pacing" },
+    "rest_and_return": { "label": "Stop and come back", "text": "Stopping halfway is not failing. Your progress is saved exactly where you left it.", "source": "pacing" },
+    "rehearse_it_first": { "label": "Practise it here first", "text": "Say it here, where nothing depends on it, before you say it there.", "source": "rehearsal" },
+    "start_with_one_person": { "label": "One person first", "text": "One colleague is easier than a room. Start there and let it grow.", "source": "graded exposure" },
+    "you_can_stop_anytime": { "label": "You can stop", "text": "You can leave any activity at any point, and nothing is lost or marked.", "source": "graded exposure" }
+  }
+}

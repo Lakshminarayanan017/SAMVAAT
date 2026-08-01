@@ -1,0 +1,339 @@
+/*
+ * The game layer.
+ *
+ * Every keyframe here is defined once and named in `design-system/motion.ts`,
+ * so a component never writes its own — one definition, one place to audit.
+ *
+ * THE REDUCED-MOTION BLOCK AT THE BOTTOM IS LOAD-BEARING.
+ * It is not a courtesy. Vestibular disorders are common, and a celebration that
+ * makes somebody nauseous is a celebration that closes the app. Everything that
+ * moves through space is switched off there; opacity survives, because it
+ * carries no vestibular risk and keeps the "something happened" signal that a
+ * learner with a cognitive disability is relying on.
+ */
+
+/* ── Keyframes ───────────────────────────────────────────────────────────── */
+
+@keyframes samvaad-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes samvaad-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* One controlled overshoot, then settle. Never a bounce loop. */
+@keyframes samvaad-pop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  70%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes samvaad-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+/* A star arriving: drops in, lands, settles. */
+@keyframes samvaad-star-land {
+  0%   { transform: translateY(-14px) scale(0.6) rotate(-20deg); opacity: 0; }
+  60%  { transform: translateY(2px) scale(1.12) rotate(4deg); opacity: 1; }
+  100% { transform: translateY(0) scale(1) rotate(0); opacity: 1; }
+}
+
+/* Sweeps once across a surface to say "this is new". Never loops. */
+@keyframes samvaad-shimmer {
+  from { background-position: -160% 0; }
+  to   { background-position: 260% 0; }
+}
+
+@keyframes samvaad-mitra-hop {
+  0%   { transform: translateY(0); }
+  35%  { transform: translateY(-9px); }
+  60%  { transform: translateY(0); }
+  75%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes samvaad-mitra-tilt {
+  0%   { transform: rotate(0); }
+  40%  { transform: rotate(-7deg); }
+  100% { transform: rotate(-5deg); }
+}
+
+@keyframes samvaad-mitra-wave {
+  0%   { transform: rotate(0); }
+  25%  { transform: rotate(6deg); }
+  55%  { transform: rotate(-4deg); }
+  100% { transform: rotate(0); }
+}
+
+/* ── Mitra ───────────────────────────────────────────────────────────────── */
+
+.mitra-says {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md, 1rem);
+  flex-wrap: wrap;
+}
+
+.mitra-says__bubble {
+  position: relative;
+  margin: 0;
+  padding: var(--space-md, 1rem) var(--space-lg, 1.5rem);
+  background: var(--colour-surface);
+  border: 2px solid var(--colour-border);
+  border-radius: 16px;
+  font-size: var(--type-lg, 1.375rem);
+  line-height: 1.5;
+  max-width: 46ch;
+  flex: 1 1 18rem;
+}
+
+/* Celebration is signalled by a border weight change as well as colour, so it
+   survives a colour-vision deficiency and forced-colours mode. */
+.mitra-says[data-tone='celebrate'] .mitra-says__bubble {
+  border-color: var(--colour-accent);
+  border-width: 3px;
+}
+
+/* ── The world map ───────────────────────────────────────────────────────── */
+
+.world-map {
+  display: grid;
+  gap: var(--space-lg, 1.5rem);
+}
+
+.world-map__headline {
+  margin: 0;
+  font-size: var(--type-xl, 1.75rem);
+  font-weight: 700;
+}
+
+.world-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-md, 1rem);
+}
+
+/* The world card. A button, because it opens something. */
+.world-card {
+  --world-wash: var(--colour-surface);
+  --world-ink: var(--colour-fg);
+  --world-accent: var(--colour-accent);
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-md, 1rem);
+  width: 100%;
+  min-height: var(--target-min, 44px);
+  padding: var(--space-lg, 1.5rem);
+  border: 2px solid var(--world-accent);
+  border-radius: 18px;
+  background: var(--world-wash);
+  color: var(--world-ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.world-card:hover { transform: translateY(-2px); }
+.world-card:active { transform: translateY(0); }
+
+/* The current world is marked by a thicker border AND a text badge, never by
+   colour alone. */
+.world-card[data-current='true'] {
+  border-width: 4px;
+}
+
+.world-card__icon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+
+.world-card__title {
+  margin: 0;
+  font-size: var(--type-lg, 1.375rem);
+  font-weight: 700;
+}
+
+.world-card__caption {
+  margin: 0.25rem 0 0;
+  font-size: var(--type-sm, 1rem);
+  opacity: 0.9;
+}
+
+.world-card__badge {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Stars ───────────────────────────────────────────────────────────────── */
+
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.stars__icon { width: 20px; height: 20px; flex: none; }
+
+/* An unearned star is an outline, not a faded fill. Opacity alone fails at high
+   contrast and disappears entirely in forced-colours mode. */
+.stars__icon[data-earned='false'] { fill: none; stroke: currentColor; stroke-width: 2; opacity: 0.55; }
+.stars__icon[data-earned='true']  { fill: currentColor; stroke: none; }
+
+/* ── Level tiles ─────────────────────────────────────────────────────────── */
+
+.chapter { display: grid; gap: var(--space-sm, 0.5rem); }
+
+.chapter__title {
+  margin: 0;
+  font-size: var(--type-base, 1.125rem);
+  font-weight: 700;
+}
+
+.level-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-sm, 0.5rem);
+}
+
+.level-tile {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-md, 1rem);
+  width: 100%;
+  min-height: var(--target-min, 44px);
+  padding: var(--space-md, 1rem);
+  border: 2px solid var(--colour-border);
+  border-radius: 14px;
+  background: var(--colour-surface);
+  color: var(--colour-fg);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.level-tile:hover { transform: translateX(2px); }
+
+/* The recommended level is heavier AND carries the word "Next". */
+.level-tile[data-status='recommended'] {
+  border-color: var(--colour-accent);
+  border-width: 3px;
+}
+
+/* An early level is quieter, never disabled and never padlocked. A padlock on a
+   disability-adapted product reads as "not for you". */
+.level-tile[data-status='available_early'] { opacity: 0.82; border-style: dashed; }
+
+.level-tile__index {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  font-weight: 700;
+}
+
+.level-tile__title { margin: 0; font-weight: 600; }
+
+.level-tile__caption {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  color: var(--colour-fg-muted);
+}
+
+.level-tile__missions {
+  margin: 0.35rem 0 0;
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+}
+
+.mission-chip {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--colour-border);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--colour-fg-muted);
+}
+
+/* ── Celebration ─────────────────────────────────────────────────────────── */
+
+.celebration {
+  display: grid;
+  gap: var(--space-lg, 1.5rem);
+  justify-items: center;
+  text-align: center;
+  padding: var(--space-xl, 2.5rem) var(--space-lg, 1.5rem);
+}
+
+.celebration__stars { display: flex; gap: 0.5rem; }
+
+.celebration__star { width: 52px; height: 52px; }
+
+.celebration__headline {
+  margin: 0;
+  font-size: var(--type-xxl, 2.25rem);
+  font-weight: 700;
+}
+
+/*
+ * No confetti. Considered and rejected: dozens of independently moving objects
+ * is the single worst pattern for vestibular sensitivity, and it is also the
+ * least useful — the learner cannot tell what they achieved from it. Three
+ * stars landing says the same thing, precisely.
+ */
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Hover lifts move the pointer target itself, which is disorienting when
+     motion sensitivity is on and actively unhelpful for a learner with a tremor
+     who is trying to keep the pointer still. */
+  .world-card:hover,
+  .level-tile:hover,
+  .world-card:active {
+    transform: none;
+  }
+}
+
+/*
+ * The same again, driven by the learner's own setting rather than the OS.
+ * `applyTheme` sets `--motion-scale: 0`, and this honours it — an OS preference
+ * is a default, not a verdict, and the in-app toggle has to actually work.
+ */
+:root[style*='--motion-scale: 0'] .world-card:hover,
+:root[style*='--motion-scale: 0'] .level-tile:hover {
+  transform: none;
+}

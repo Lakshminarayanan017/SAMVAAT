@@ -23,6 +23,7 @@ from app.routers import (
     export,
     health,
     institution,
+    journey,
     practice,
     profile,
     progress,
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(audio.router)
     app.include_router(conversation.router)
     app.include_router(profile.router)
+    app.include_router(journey.router)
     app.include_router(progress.router)
     app.include_router(trainer.router)
     app.include_router(institution.router)
