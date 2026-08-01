@@ -55,6 +55,13 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
     log.info("contracts loaded")
 
+    # Apply SAMVAAD_FLAG_<NAME>=on|off|<0-100> overrides. Without this call the
+    # flag registry's defaults are the only thing anyone ever gets, and there is
+    # no way — short of editing code — to turn a phase on for a deploy.
+    from samvaad_platform.flags import load_from_env
+
+    load_from_env()
+
     # Development and tests only. Production schema changes go through Alembic,
     # because `create_all` cannot alter an existing table and silently does
     # nothing when a column has been added — which looks exactly like success.
