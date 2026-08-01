@@ -1796,28 +1796,37 @@ passed by hand, a fairness gate in CI, and an audit record for every score.
 
 ## Appendix A — Decisions requiring sign-off
 
-| # | Decision | Recommendation |
+**Signed off 2026-08-01. Every recommendation was accepted.** Each is now recorded as an ADR,
+because a decision nobody can find later is a decision that gets re-litigated.
+
+| # | Decision | Recommendation | Status |
+|---|---|---|---|
+| A1 | Emotion detection | Curriculum + self-report only; never measure the learner | ✅ [ADR-0009](ADR/0009-emotion-as-curriculum.md) |
+| A2 | Body language | Comprehension only; never score the learner's body | ✅ [ADR-0009](ADR/0009-emotion-as-curriculum.md) |
+| A3 | Confetti | Three levels; Gentle default; reduced-motion forces Still | ✅ [ADR-0010](ADR/0010-three-motion-levels.md) |
+| A4 | Forecasting | Build "what next", never a predicted ceiling | ✅ [ADR-0011](ADR/0011-no-predicted-ceiling.md) |
+| A5 | Languages | 12 UI / 12 AI / 3 phrase bank / 1 speech — stated honestly in-product | ✅ [ADR-0012](ADR/0012-four-tier-multilingual.md) |
+| A6 | Mascot | Mitra the mynah | ✅ accepted |
+| A7 | World map | Vertical list; decorative path deferred to V2 | ✅ accepted |
+| A8 | Channel comparison | Moves from learner nav to `/demo` | ✅ accepted |
+| A9 | AAA | Target; publish 1.2.6 and 3.1.5 as documented partials | ✅ accepted |
+
+## Appendix B — ADRs
+
+Numbered to continue the existing sequence rather than to match the draft numbering above.
+
+| ADR | Subject | Status |
 |---|---|---|
-| A1 | Emotion detection | Curriculum + self-report only; never measure the learner |
-| A2 | Body language | Comprehension only; never score the learner's body |
-| A3 | Confetti | Three levels; Gentle default; reduced-motion forces Still |
-| A4 | Forecasting | Build "what next", never a predicted ceiling |
-| A5 | Languages | 12 UI / 12 AI / 3 phrase bank / 1 speech — stated honestly in-product |
-| A6 | Mascot | Mitra the mynah |
-| A7 | World map | Vertical list; decorative path deferred to V2 |
-| A8 | Channel comparison | Moves from learner nav to `/demo` |
-| A9 | AAA | Target; publish 1.2.6 and 3.1.5 as documented partials |
-
-## Appendix B — ADRs to write
-
-ADR-0008 Learning profiles are presets, not diagnoses ·
-ADR-0009 Emotion as curriculum, never as measurement ·
-ADR-0010 The world map is a list ·
-ADR-0011 Three motion levels ·
-ADR-0012 Four-tier multilingual ·
-ADR-0013 Cosmetic-only currency ·
-ADR-0014 Client router and the accessible route contract
+| [0008](ADR/0008-accessible-route-contract.md) | Client router and the accessible route contract | ✅ written |
+| [0009](ADR/0009-emotion-as-curriculum.md) | Emotion as curriculum, never as measurement | ✅ written |
+| [0010](ADR/0010-three-motion-levels.md) | Three motion levels | ✅ written |
+| [0011](ADR/0011-no-predicted-ceiling.md) | No predicted ceiling | ✅ written |
+| [0012](ADR/0012-four-tier-multilingual.md) | Four-tier multilingual | ✅ written |
+| 0013 | Learning profiles are presets, not diagnoses | Phase 3 |
+| 0014 | The world map is a list | Phase 2 |
+| 0015 | Cosmetic-only currency | Phase 6 |
 
 ---
 
-*End of blueprint. No code should be written against this until Appendix A is signed off.*
+*End of blueprint. Appendix A was signed off on 2026-08-01; implementation is under way.
+See `docs/STATUS.md` for which phases have shipped.*
