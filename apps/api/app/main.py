@@ -21,6 +21,7 @@ from app.routers import (
     content,
     conversation,
     export,
+    flags,
     health,
     institution,
     journey,
@@ -102,6 +103,7 @@ def create_app() -> FastAPI:
     app.include_router(trainer.router)
     app.include_router(institution.router)
     app.include_router(export.router)
+    app.include_router(flags.router)
 
     return app
 

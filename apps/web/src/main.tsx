@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { AnnouncerProvider } from '@/a11y/Announcer';
-import { App } from '@/App';
+import { AppShell } from '@/routes/AppShell';
 import { CapabilitiesProvider } from '@/services/capabilities';
 import { applyTheme } from '@/design-system/tokens';
 import './styles/global.css';
@@ -28,7 +28,7 @@ createRoot(root).render(
   <StrictMode>
     <CapabilitiesProvider>
       <AnnouncerProvider>
-        <App />
+        <AppShell />
       </AnnouncerProvider>
     </CapabilitiesProvider>
   </StrictMode>,

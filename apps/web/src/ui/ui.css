@@ -180,3 +180,73 @@
   overflow-x: auto;
   max-inline-size: 100%;
 }
+
+/* ── choice groups ───────────────────────────────────────────────────────────
+   A real radio group whose visible face is a sibling span, because a 44px
+   radio dot is not a 44px target and the label must be part of the target for
+   a learner with a motor impairment.
+
+   Keyed on :checked and :focus-visible so the visible state always follows the
+   real control rather than a copy of it that can fall out of step.           */
+
+[data-ui='choice-group'] {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-raised);
+  padding: var(--space-md, 1rem);
+  margin: 0;
+  min-inline-size: 0; /* fieldsets refuse to shrink below their content without this */
+}
+
+[data-ui='choice'] {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+[data-ui='choice-face'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--target-min, 44px);
+  min-inline-size: var(--target-min, 44px);
+  padding-block: 0.75rem;
+  padding-inline: 1.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-size: var(--type-base, 1.125rem);
+  transition: background-color var(--duration-instant, 90ms) ease;
+}
+
+[data-ui='choice']:hover [data-ui='choice-face'] {
+  background: var(--surface-sunken);
+}
+
+/* Selected carries a border-weight change as well as colour, so the choice is
+   still legible with no colour at all.                                       */
+[data-ui='choice'] input:checked + [data-ui='choice-face'] {
+  background: var(--interactive-rest);
+  color: var(--text-on-interactive);
+  border-color: var(--interactive-rest);
+  border-width: 2px;
+  font-weight: 700;
+}
+
+[data-ui='choice'] input:focus-visible + [data-ui='choice-face'] {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--surface-raised),
+    0 0 0 5px var(--focus-ring);
+}
+
+@media (forced-colors: active) {
+  [data-ui='choice'] input:focus-visible + [data-ui='choice-face'] {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+  [data-ui='choice'] input:checked + [data-ui='choice-face'] {
+    border-width: 3px;
+  }
+}

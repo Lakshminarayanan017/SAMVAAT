@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (M14 institution dashboard, M10 social stories UI, M17 export + erasure UI) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (Redesign Blueprint Phase 1 — primitives, semantic tokens, router, flags) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -54,6 +54,10 @@ under their own identity.
 | ~~No onboarding~~ | Four-door screen, then confirmation asked *through* the chosen channel. |
 | ~~E5 not enforced~~ | Trainer dashboard. Overrides written **onto** the audit record, never over the AI's score, with a required reason. `TestEthicsE5`. |
 | ~~Practice loop had no client screen~~ | Shipped. The daily loop a learner actually opens. |
+| ~~No client-side router~~ | React Router, behind one `<AppRoute>` wrapper that moves focus, announces and sets the title on every navigation — with a test that walks the real route table so a route added without it fails CI. See [ADR-0008](ADR/0008-accessible-route-contract.md). |
+| ~~No UI primitives~~ | `apps/web/src/ui/` — twelve primitives. Feature screens no longer invent their own button, spacing or idea of "muted text". |
+| ~~No code splitting~~ | Route-level lazy imports. Entry chunk **69.8 KB gzipped** against a 120 KB budget, enforced by `npm run check:bundle`. |
+| ~~No feature flags~~ | `packages/platform/samvaad_platform/flags.py`, served to the client at `/flags`. Every redesign phase ships behind one whose off-state is the current behaviour. |
 | ~~Erasure left three tables behind~~ | **Found by writing the test that walks the schema instead of a list of tables.** `DELETE /auth/me` reported "everything about you has been deleted" while the communication profile, the consent ledger and the trainer link all survived — the user row is removed with a Core `delete()`, which does not run ORM cascades, and SQLite ignores foreign keys unless `PRAGMA foreign_keys=ON`. The trainer link carries `display_name`: the learner's real name. Fixed, and the schema walk now fails on any table that still names an erased learner. |
 | ~~No data export~~ | `GET /export/me`. Leads with a plain-language summary, then the complete record. Checked against the schema so it cannot drift from what erasure deletes. |
 | ~~Export and erasure were API-only~~ | A "Your data" screen. Both rights were unreachable from the client, which made "self-service" a claim rather than a fact. |
@@ -87,7 +91,6 @@ What remains is breadth, not viability.
 
 | Thing | Why it is acceptable today | When it stops being |
 |---|---|---|
-| No client-side router | Six tabs, no deep links, no back-button expectation yet. A real router means announcing route changes, moving focus and keeping the document title in step — worth doing once, properly | When a surface needs a shareable URL. A trainer emailing a learner "open this page" is the trigger |
 | Free tiers sleep on idle (~30 s cold start) | Tolerable in development | Before the pilot; fix is a paid dyno, not a rewrite |
 | `packages/platform` needs pip ≥ 21.3 | Editable install needs PEP 660 | Document it; it produces a confusing error otherwise |
 | No password or magic-link sign-in | Guest + upgrade covers the demo, and passwords are a liability we do not need | M17, when Supabase Auth lands behind the same `authenticate` dependency |
@@ -105,15 +108,16 @@ What remains is breadth, not viability.
 
 | Job | Covers |
 |---|---|
+| `bundle` | Entry chunk <=120 KB gzipped (currently 69.8 KB), no route chunk over 60 KB |
 | `contracts` | 20 checks — schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 268 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5`, k-anonymity |
+| `api` | 299 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5`, k-anonymity |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
-| `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 267 tests, lint, typecheck, build, axe sweep across every channel, every input mode **and every real screen** |
+| `platform` | 83 tests, lint, redaction policy + fail-closed service auth |
+| `web` | 478 tests, lint, typecheck, build, axe sweep across every channel, every input mode **and every real screen** |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**817 tests** (268 + 188 + 41 + 53 + 267), plus the 20 contract checks. Nothing merges
+**1,089 tests** (299 + 188 + 41 + 83 + 478), plus the 20 contract checks. Nothing merges
 without all seven jobs green.
 
 > A previous revision of this file claimed 825. It did not reconcile with the per-job

@@ -20,6 +20,16 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
 
+  // Build scripts run in Node, not the browser. Linted rather than ignored:
+  // the bundle-budget check is a CI gate, and a gate with a typo in it passes
+  // silently, which is worse than having no gate.
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly' },
+    },
+  },
+
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
