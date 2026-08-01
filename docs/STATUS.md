@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (M14 trainer dashboard — E5 now enforced) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (M12 gamification, M13 recommender, learner progress screen) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -24,16 +24,16 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M9 | GenAI role-play (RAG, guardrails) | ✅ done | Wired to gateway and client. |
 | M10 | Social stories | 🟡 partial | Service + gateway route exist. **No client UI.** |
 | M11 | Mock interview & bias-guarded rubric | ✅ done | Wired end-to-end; audit record persisted. |
-| M12 | Gamification | ⬜ not started | |
-| M13 | Recommendation engine | ⬜ not started | Session builder does a simple version already. |
-| M14 | The three dashboards | 🟡 partial | Trainer dashboard done — **E5 now enforced**. Learner and institution views not started. |
+| M12 | Gamification | ✅ done | XP for effort, non-punishing streaks, courage/growth badges. |
+| M13 | Recommendation engine | ✅ done | Rule-based and explainable. Every suggestion carries a reason the learner can read. Contextual bandit stays `[V2]`. |
+| M14 | The three dashboards | 🟡 partial | Trainer and learner views done. **Institution view not started** (needs the k-anonymity floor). |
 | M15 | Offline-first & on-device inference | ⬜ not started | |
 | M16 | ISL & AAC depth | 🟡 partial | AAC input + ISL output done. **ISL recognition not started** — blocks E4. |
 | M17 | Privacy hardening | 🟡 partial | Consent, retention, redaction, service auth, self-service erasure done. **No RLS, no data export.** |
 | M18 | Accessibility validation & pilot | 🟡 partial | axe + persona tests in CI. **No manual screen-reader passes. No pilot partner.** |
 | M19 | Observability & MLOps | 🟡 partial | Structured logging, tracing, redaction shipped. **No Sentry, no metrics, no dashboards.** |
 
-**9 done · 8 partial · 3 not started.**
+**11 done · 7 partial · 1 not started.**
 
 ---
 
@@ -89,6 +89,8 @@ What remains is breadth, not viability.
 | No password or magic-link sign-in | Guest + upgrade covers the demo, and passwords are a liability we do not need | M17, when Supabase Auth lands behind the same `authenticate` dependency |
 | No Alembic migrations yet | `create_all` is correct for SQLite dev and tests | First Postgres deployment — `create_all` cannot alter a table and fails silently |
 | Social stories have no UI | The endpoint works and is testable | Whenever a learner is meant to read one |
+| The recommender cannot see weak phonemes yet | GOP is not live, and inventing a weakness would be worse than omitting one — the other signals simply carry more weight | When M6's GOP lands |
+| Institution dashboard not built | Needs the k-anonymity floor (suppress cells below n=5) designed first, and no institution is using this yet | M14 remainder |
 | Session token in `localStorage` | An httpOnly cookie needs a same-site deployment we do not have, and would break offline identity in M15 | When client and API share a domain |
 
 ---
@@ -98,14 +100,14 @@ What remains is breadth, not viability.
 | Job | Covers |
 |---|---|
 | `contracts` | Schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 164 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5` |
+| `api` | 212 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5` |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 173 tests, lint, typecheck, build, axe sweep across every channel and input mode |
+| `web` | 188 tests, lint, typecheck, build, axe sweep across every channel and input mode |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**739 tests.** Nothing merges without all seven green.
+**802 tests.** Nothing merges without all seven green.
 
 ---
 

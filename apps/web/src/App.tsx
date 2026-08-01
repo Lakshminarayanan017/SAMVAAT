@@ -23,16 +23,18 @@ import { ChannelComparison } from '@/features/channel-comparison/ChannelComparis
 import { InterviewSession } from '@/features/interview/InterviewSession';
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow';
 import { PracticeSession } from '@/features/practice/PracticeSession';
+import { ProgressPanel } from '@/features/progress/ProgressPanel';
 import { TrainerDashboard } from '@/features/trainer/TrainerDashboard';
 import { authHeaders, startSession, type Session } from '@/services/session';
 
 const BASE_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:8000';
 
-type View = 'practice' | 'interview' | 'trainer' | 'router';
+type View = 'practice' | 'interview' | 'progress' | 'trainer' | 'router';
 
 const LEARNER_VIEWS: { id: View; label: string }[] = [
   { id: 'practice', label: 'Practise phrases' },
   { id: 'interview', label: 'Practise an interview' },
+  { id: 'progress', label: 'My progress' },
   { id: 'router', label: 'How this works' },
 ];
 
@@ -224,6 +226,7 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
           <PracticeSession token={session.token} blocks={blocks} />
         )}
         {view === 'interview' && <InterviewSession userId={session?.userId ?? 'guest'} />}
+        {view === 'progress' && session && <ProgressPanel token={session.token} />}
         {view === 'trainer' && session && <TrainerDashboard token={session.token} />}
         {view === 'router' && <ChannelComparison blocks={blocks} embedded />}
       </main>

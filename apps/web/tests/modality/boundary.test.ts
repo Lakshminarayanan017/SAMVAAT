@@ -27,7 +27,12 @@ async function lint(code: string, filename: string) {
   return result?.messages ?? [];
 }
 
-describe('the Modality Router boundary', () => {
+// Each case runs a real ESLint pass over a scratch file. That is the point —
+// a mocked linter would prove nothing about the rule that actually ships — but
+// it costs seconds, not milliseconds, and grows with the config.
+const LINT_TIMEOUT_MS = 30_000;
+
+describe('the Modality Router boundary', { timeout: LINT_TIMEOUT_MS }, () => {
   it('rejects a feature importing a renderer directly', async () => {
     const messages = await lint(
       `import { EasyReadRenderer } from '@/modality/renderers/EasyReadRenderer';\nexport default EasyReadRenderer;\n`,

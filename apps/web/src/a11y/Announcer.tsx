@@ -54,7 +54,16 @@ export function AnnouncerProvider({ children }: { children: ReactNode }) {
 
   return (
     <AnnouncerContext.Provider value={value}>
-      {children}
+      {/*
+        `display: contents` makes this wrapper invisible to layout — it exists
+        only so tests can scope queries to the page and exclude the live regions
+        below. Without it, every announced sentence also appears in the DOM as a
+        second copy, and "found multiple elements" becomes the default failure
+        for any feature that announces what it just rendered.
+      */}
+      <div data-samvaad-content="" style={{ display: 'contents' }}>
+        {children}
+      </div>
       <div
         data-testid="announcer-polite"
         role="status"
