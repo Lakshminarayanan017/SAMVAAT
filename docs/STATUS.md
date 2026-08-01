@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (M12 gamification, M13 recommender, learner progress screen) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (M15 offline-first) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -27,7 +27,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M12 | Gamification | ✅ done | XP for effort, non-punishing streaks, courage/growth badges. |
 | M13 | Recommendation engine | ✅ done | Rule-based and explainable. Every suggestion carries a reason the learner can read. Contextual bandit stays `[V2]`. |
 | M14 | The three dashboards | 🟡 partial | Trainer and learner views done. **Institution view not started** (needs the k-anonymity floor). |
-| M15 | Offline-first & on-device inference | ⬜ not started | |
+| M15 | Offline-first & on-device inference | 🟡 partial | Service worker, IndexedDB, append-only outbox, content un-bundled. **On-device ASR not started.** |
 | M16 | ISL & AAC depth | 🟡 partial | AAC input + ISL output done. **ISL recognition not started** — blocks E4. |
 | M17 | Privacy hardening | 🟡 partial | Consent, retention, redaction, service auth, self-service erasure done. **No RLS, no data export.** |
 | M18 | Accessibility validation & pilot | 🟡 partial | axe + persona tests in CI. **No manual screen-reader passes. No pilot partner.** |
@@ -82,7 +82,6 @@ What remains is breadth, not viability.
 
 | Thing | Why it is acceptable today | When it stops being |
 |---|---|---|
-| Content bundled into the JS (~80 kB gzipped) | Fine for a demo | Before the pilot — M15 moves it to IndexedDB |
 | No client-side router | Two views do not justify one | M14, when dashboards arrive |
 | Free tiers sleep on idle (~30 s cold start) | Tolerable in development | Before the pilot; fix is a paid dyno, not a rewrite |
 | `packages/platform` needs pip ≥ 21.3 | Editable install needs PEP 660 | Document it; it produces a confusing error otherwise |
@@ -91,6 +90,8 @@ What remains is breadth, not viability.
 | Social stories have no UI | The endpoint works and is testable | Whenever a learner is meant to read one |
 | The recommender cannot see weak phonemes yet | GOP is not live, and inventing a weakness would be worse than omitting one — the other signals simply carry more weight | When M6's GOP lands |
 | Institution dashboard not built | Needs the k-anonymity floor (suppress cells below n=5) designed first, and no institution is using this yet | M14 remainder |
+| On-device ASR not wired | The offline shell, cache and outbox all work without it; a learner practises offline by typing or tapping symbols and speech analysis queues for reconnect | M15 remainder — needs `onnxruntime-web` and a quantised Whisper |
+| PWA manifest has no icons | Installability works; the icon set needs a designer, not a developer | Before the pilot |
 | Session token in `localStorage` | An httpOnly cookie needs a same-site deployment we do not have, and would break offline identity in M15 | When client and API share a domain |
 
 ---
@@ -100,14 +101,14 @@ What remains is breadth, not viability.
 | Job | Covers |
 |---|---|
 | `contracts` | Schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 212 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5` |
+| `api` | 216 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5` |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 188 tests, lint, typecheck, build, axe sweep across every channel and input mode |
+| `web` | 207 tests, lint, typecheck, build, axe sweep across every channel and input mode |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**802 tests.** Nothing merges without all seven green.
+**825 tests.** Nothing merges without all seven green.
 
 ---
 

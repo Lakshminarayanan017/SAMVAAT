@@ -25,6 +25,9 @@ import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow';
 import { PracticeSession } from '@/features/practice/PracticeSession';
 import { ProgressPanel } from '@/features/progress/ProgressPanel';
 import { TrainerDashboard } from '@/features/trainer/TrainerDashboard';
+import { getContent } from '@/offline/content';
+import { outboxSize } from '@/offline/db';
+import { startSync } from '@/offline/sync';
 import { authHeaders, startSession, type Session } from '@/services/session';
 
 const BASE_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:8000';
@@ -44,8 +47,17 @@ const TRAINER_VIEW: { id: View; label: string } = { id: 'trainer', label: 'My le
 
 type Boot = 'starting' | 'onboarding' | 'ready' | 'offline';
 
-export function App({ blocks }: { blocks: ContentBlock[] }) {
+export function App() {
   const announce = useAnnounce();
+
+  // The phrase bank is fetched and cached rather than bundled (M15). A
+  // learner on a metered connection should not pay for 226 blocks of
+  // JavaScript before seeing a single lesson.
+  const [blocks, setBlocks] = useState<ContentBlock[]>([]);
+  const [contentSource, setContentSource] = useState<'cache' | 'network' | 'unavailable'>(
+    'network',
+  );
+  const [queued, setQueued] = useState(0);
 
   const [boot, setBoot] = useState<Boot>('starting');
   const [session, setSession] = useState<Session | null>(null);
@@ -72,6 +84,11 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
       }
 
       setSession(started);
+
+      const content = await getContent();
+      if (cancelled) return;
+      setBlocks(content.blocks);
+      setContentSource(content.source);
 
       if (started.needsOnboarding) {
         setBoot('onboarding');
@@ -122,6 +139,26 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
     },
     [announce, session],
   );
+
+  // ── offline sync ───────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!session) return;
+
+    const refresh = () => void outboxSize().then(setQueued);
+    refresh();
+
+    // Replays anything the learner did offline, oldest first. Nothing leaves
+    // the outbox until the server confirms it.
+    const stop = startSync(session.token, (result) => {
+      refresh();
+      if (result.sent > 0) {
+        announce(`${result.sent} saved answer${result.sent === 1 ? '' : 's'} sent.`);
+      }
+    });
+
+    return stop;
+  }, [session, announce]);
 
   // ── view changes ───────────────────────────────────────────────────────────
 
@@ -185,6 +222,8 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
       >
         <p style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem' }}>SAMVAAD</p>
 
+        <OfflineNotice source={contentSource} queued={queued} />
+
         <div
           role="tablist"
           aria-label="Views"
@@ -231,6 +270,45 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
         {view === 'router' && <ChannelComparison blocks={blocks} embedded />}
       </main>
     </ProfileProvider>
+  );
+}
+
+/**
+ * What is happening with the network, in plain words.
+ *
+ * Only appears when there is something to say. A permanent "you are online"
+ * badge is noise; a learner needs to know when their work is waiting, and
+ * nothing else.
+ */
+function OfflineNotice({
+  source,
+  queued,
+}: {
+  source: 'cache' | 'network' | 'unavailable';
+  queued: number;
+}) {
+  if (source === 'network' && queued === 0) return null;
+
+  const message =
+    source === 'unavailable'
+      ? 'We could not load your lessons. Check your connection and try again.'
+      : queued > 0
+        ? `Working offline. ${queued} answer${queued === 1 ? '' : 's'} saved here, ` +
+          'and they will be sent when you are back online.'
+        : 'Working from your saved lessons.';
+
+  return (
+    <p
+      role="status"
+      data-testid="offline-notice"
+      style={{
+        margin: '.5rem 0 0',
+        fontSize: '.95rem',
+        color: 'var(--colour-fg-muted)',
+      }}
+    >
+      {message}
+    </p>
   );
 }
 

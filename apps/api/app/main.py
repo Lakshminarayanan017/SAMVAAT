@@ -18,6 +18,7 @@ from app.config import get_settings
 from app.routers import (
     audio,
     auth,
+    content,
     conversation,
     health,
     practice,
@@ -88,6 +89,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(auth.router)
+    app.include_router(content.router)
     app.include_router(practice.router)
     app.include_router(audio.router)
     app.include_router(conversation.router)
