@@ -28,6 +28,8 @@ export interface Session {
    * simply show a tab that 403s.
    */
   isTrainer: boolean;
+  /** Same caveat as `isTrainer`: presentation, not a security boundary. */
+  isInstitution: boolean;
 }
 
 function read(): string | null {
@@ -103,6 +105,7 @@ function toSession(body: TokenResponse): Session {
     isGuest: body.is_guest,
     needsOnboarding: body.needs_onboarding,
     isTrainer: body.role === 'trainer' || body.role === 'admin',
+    isInstitution: body.role === 'institution' || body.role === 'admin',
   };
 }
 

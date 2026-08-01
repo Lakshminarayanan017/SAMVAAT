@@ -99,6 +99,10 @@ class Trainer(Learner):
     """Same interface, a trainer token."""
 
 
+class Institution(Learner):
+    """Same interface, an institution token."""
+
+
 def _sign_up(client: TestClient) -> Learner:
     response = client.post("/auth/guest")
     assert response.status_code == 200, response.text
@@ -139,6 +143,25 @@ async def trainer(app, engine) -> Trainer:
 
     with TestClient(app) as client:
         yield Trainer(client, user_id, issue_token(user_id, role="trainer", is_guest=False))
+
+
+@pytest_asyncio.fixture
+async def institution(app, engine) -> Institution:
+    """An institution account.
+
+    Its id doubles as the `institution_id` on trainer links, so a test can
+    enrol learners into it without inventing a second identifier.
+    """
+    user_id = f"ins_{uuid4().hex[:12]}"
+
+    async with async_sessionmaker(engine, expire_on_commit=False)() as db:
+        db.add(User(id=user_id, role="institution", is_guest=False))
+        await db.commit()
+
+    with TestClient(app) as client:
+        yield Institution(
+            client, user_id, issue_token(user_id, role="institution", is_guest=False)
+        )
 
 
 @pytest.fixture

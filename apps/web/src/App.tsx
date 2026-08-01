@@ -20,6 +20,7 @@ import type { CommunicationAbilityProfile, ContentBlock } from '@samvaad/contrac
 import { useAnnounce } from '@/a11y/Announcer';
 import { DEFAULT_PROFILE, ProfileProvider } from '@/a11y/ProfileProvider';
 import { ChannelComparison } from '@/features/channel-comparison/ChannelComparison';
+import { InstitutionDashboard } from '@/features/institution/InstitutionDashboard';
 import { InterviewSession } from '@/features/interview/InterviewSession';
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow';
 import { PracticeSession } from '@/features/practice/PracticeSession';
@@ -32,7 +33,7 @@ import { authHeaders, startSession, type Session } from '@/services/session';
 
 const BASE_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:8000';
 
-type View = 'practice' | 'interview' | 'progress' | 'trainer' | 'router';
+type View = 'practice' | 'interview' | 'progress' | 'trainer' | 'institution' | 'router';
 
 const LEARNER_VIEWS: { id: View; label: string }[] = [
   { id: 'practice', label: 'Practise phrases' },
@@ -44,6 +45,13 @@ const LEARNER_VIEWS: { id: View; label: string }[] = [
 //: Only rendered for a trainer token. The API refuses it regardless of what the
 //: client shows, so this is presentation rather than a security boundary.
 const TRAINER_VIEW: { id: View; label: string } = { id: 'trainer', label: 'My learners' };
+
+//: Likewise. An institution sees anonymised aggregates and nothing else — a
+//: different tab from the trainer's, because neither role implies the other.
+const INSTITUTION_VIEW: { id: View; label: string } = {
+  id: 'institution',
+  label: 'Cohort report',
+};
 
 type Boot = 'starting' | 'onboarding' | 'ready' | 'offline';
 
@@ -162,7 +170,11 @@ export function App() {
 
   // ── view changes ───────────────────────────────────────────────────────────
 
-  const views = session?.isTrainer ? [...LEARNER_VIEWS, TRAINER_VIEW] : LEARNER_VIEWS;
+  const views = [
+    ...LEARNER_VIEWS,
+    ...(session?.isTrainer ? [TRAINER_VIEW] : []),
+    ...(session?.isInstitution ? [INSTITUTION_VIEW] : []),
+  ];
 
   useEffect(() => {
     if (firstRender.current) {
@@ -267,6 +279,7 @@ export function App() {
         {view === 'interview' && <InterviewSession userId={session?.userId ?? 'guest'} />}
         {view === 'progress' && session && <ProgressPanel token={session.token} />}
         {view === 'trainer' && session && <TrainerDashboard token={session.token} />}
+        {view === 'institution' && session && <InstitutionDashboard token={session.token} />}
         {view === 'router' && <ChannelComparison blocks={blocks} embedded />}
       </main>
     </ProfileProvider>
