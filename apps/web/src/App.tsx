@@ -25,6 +25,7 @@ import { InterviewSession } from '@/features/interview/InterviewSession';
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow';
 import { PracticeSession } from '@/features/practice/PracticeSession';
 import { ProgressPanel } from '@/features/progress/ProgressPanel';
+import { StoryChooser } from '@/features/stories/StoryChooser';
 import { TrainerDashboard } from '@/features/trainer/TrainerDashboard';
 import { getContent } from '@/offline/content';
 import { outboxSize } from '@/offline/db';
@@ -33,11 +34,19 @@ import { authHeaders, startSession, type Session } from '@/services/session';
 
 const BASE_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:8000';
 
-type View = 'practice' | 'interview' | 'progress' | 'trainer' | 'institution' | 'router';
+type View =
+  | 'practice'
+  | 'interview'
+  | 'stories'
+  | 'progress'
+  | 'trainer'
+  | 'institution'
+  | 'router';
 
 const LEARNER_VIEWS: { id: View; label: string }[] = [
   { id: 'practice', label: 'Practise phrases' },
   { id: 'interview', label: 'Practise an interview' },
+  { id: 'stories', label: 'Understand a situation' },
   { id: 'progress', label: 'My progress' },
   { id: 'router', label: 'How this works' },
 ];
@@ -277,6 +286,7 @@ export function App() {
           <PracticeSession token={session.token} blocks={blocks} />
         )}
         {view === 'interview' && <InterviewSession userId={session?.userId ?? 'guest'} />}
+        {view === 'stories' && session && <StoryChooser token={session.token} />}
         {view === 'progress' && session && <ProgressPanel token={session.token} />}
         {view === 'trainer' && session && <TrainerDashboard token={session.token} />}
         {view === 'institution' && session && <InstitutionDashboard token={session.token} />}

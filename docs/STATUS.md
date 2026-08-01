@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (M14 institution dashboard) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (M14 institution dashboard, M10 social stories UI) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -22,7 +22,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M7 | Prosody, disfluency, PPI | 🟡 partial | Maths + gates done. **Classifier weights not yet dropped in.** |
 | M8 | Personalised ASR adaptation | 🟡 partial | Vocabulary biasing + enrolment done. **LoRA blocked on UASpeech access.** |
 | M9 | GenAI role-play (RAG, guardrails) | ✅ done | Wired to gateway and client. |
-| M10 | Social stories | 🟡 partial | Service + gateway route exist. **No client UI.** |
+| M10 | Social stories | ✅ done | Reachable. Panels are converted to `ContentBlock`s and rendered through the Modality Router, so a generated story reaches a pictograph reader as symbols rather than prose. Situations are a fixed list, not free text — see the gap table. |
 | M11 | Mock interview & bias-guarded rubric | ✅ done | Wired end-to-end; audit record persisted. |
 | M12 | Gamification | ✅ done | XP for effort, non-punishing streaks, courage/growth badges. |
 | M13 | Recommendation engine | ✅ done | Rule-based and explainable. Every suggestion carries a reason the learner can read. Contextual bandit stays `[V2]`. |
@@ -33,7 +33,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M18 | Accessibility validation & pilot | 🟡 partial | axe + persona tests in CI. **No manual screen-reader passes. No pilot partner.** |
 | M19 | Observability & MLOps | 🟡 partial | Structured logging, tracing, redaction shipped. **No Sentry, no metrics, no dashboards.** |
 
-**12 done · 8 partial · 0 not started.** (20 modules, counted from the table above.)
+**13 done · 7 partial · 0 not started.** (20 modules, counted from the table above.)
 
 ---
 
@@ -54,6 +54,7 @@ under their own identity.
 | ~~No onboarding~~ | Four-door screen, then confirmation asked *through* the chosen channel. |
 | ~~E5 not enforced~~ | Trainer dashboard. Overrides written **onto** the audit record, never over the AI's score, with a required reason. `TestEthicsE5`. |
 | ~~Practice loop had no client screen~~ | Shipped. The daily loop a learner actually opens. |
+| ~~Social stories unreachable~~ | Shipped. The last case of "built but invisible" — the endpoint had worked since M10 with nothing in the product able to open one. |
 | ~~Institution dashboard not built~~ | Shipped, behind three gates. The one worth naming is the third: a cohort figure is withheld when the cell **or its complement** falls below n=5, and if a breakdown would leave exactly one category hidden, a second goes too — otherwise the published columns subtract to reveal it. In a centre of twelve, "1 learner uses Indian Sign Language" names that person to everyone who works there. |
 
 **Six of seven charter rules are now enforced by a test.** Only E4 remains,
@@ -88,7 +89,7 @@ What remains is breadth, not viability.
 | `packages/platform` needs pip ≥ 21.3 | Editable install needs PEP 660 | Document it; it produces a confusing error otherwise |
 | No password or magic-link sign-in | Guest + upgrade covers the demo, and passwords are a liability we do not need | M17, when Supabase Auth lands behind the same `authenticate` dependency |
 | No Alembic migrations yet | `create_all` is correct for SQLite dev and tests | First Postgres deployment — `create_all` cannot alter a table and fails silently |
-| Social stories have no UI | The endpoint works and is testable | Whenever a learner is meant to read one |
+| Social stories cover six preset situations, not free text | A text box would shut out the two personas most likely to need a story — describing a confusing situation in writing is the skill they came here lacking — and would put learner-controlled text into a model prompt. The list is the accessible option *and* the safe one | When a trainer can author situations for their own caseload. That keeps the learner's input an index into a list, not prose |
 | The recommender cannot see weak phonemes yet | GOP is not live, and inventing a weakness would be worse than omitting one — the other signals simply carry more weight | When M6's GOP lands |
 | The cohort report has no date range | Deliberate. Every filter parameter is a way to narrow a cohort until one person is left, and a date range is the easiest one to abuse — "learners active in this one week" can be a group of one. A range is only safe with a query budget we do not have | When there is a real reporting need *and* a per-institution query budget to bound it |
 | On-device ASR not wired | The offline shell, cache and outbox all work without it; a learner practises offline by typing or tapping symbols and speech analysis queues for reconnect | M15 remainder — needs `onnxruntime-web` and a quantised Whisper |
@@ -106,10 +107,10 @@ What remains is breadth, not viability.
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 222 tests, lint, typecheck, build, axe sweep across every channel and input mode |
+| `web` | 249 tests, lint, typecheck, build, axe sweep across every channel, every input mode **and every real screen** |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**748 tests** (244 + 188 + 41 + 53 + 222), plus the 20 contract checks. Nothing merges
+**775 tests** (244 + 188 + 41 + 53 + 249), plus the 20 contract checks. Nothing merges
 without all seven jobs green.
 
 > A previous revision of this file claimed 825. It did not reconcile with the per-job
