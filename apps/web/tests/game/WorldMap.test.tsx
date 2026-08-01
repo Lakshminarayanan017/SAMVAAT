@@ -231,7 +231,9 @@ describe('sensitive chapters', () => {
     // A learner rehearsing disclosure is rehearsing something that can cost
     // them a job. The way out is offered before they start, not after.
     const withSensitive = journey();
-    withSensitive.worlds[0].chapters[0].sensitive = true;
+    const chapter = withSensitive.worlds[0]?.chapters[0];
+    if (!chapter) throw new Error('fixture has no first chapter to mark sensitive');
+    chapter.sensitive = true;
 
     render(
       <AnnouncerProvider>

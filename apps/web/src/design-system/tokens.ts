@@ -12,6 +12,8 @@
  * high contrast without dark mode. Collapsing them into one setting forces a
  * choice nobody should have to make.
  */
+import { applyMotionTokens } from './motion';
+import { applySemanticTokens } from './semantic';
 
 export type ColourScheme = 'light' | 'dark';
 export type ContrastTheme = 'standard' | 'high_contrast';
@@ -158,6 +160,25 @@ export function applyTheme(
   for (const [name, value] of Object.entries(palette)) {
     element.style.setProperty(`--colour-${kebab(name)}`, value);
   }
+
+  // The semantic layer (Blueprint §9.2). Written alongside the raw palette so a
+  // component never has to know whether it has been applied separately — if the
+  // page has a theme, it has roles.
+  applySemanticTokens(colourScheme, contrastTheme, element);
+
+  // Spacing, type and duration as custom properties too, so the fallbacks in
+  // `ui/styles.ts` (`var(--space-md, 1rem)`) are genuinely fallbacks rather
+  // than the operative value. A design system whose scale lives only in inline
+  // defaults cannot be changed in one place, which is the point of having one.
+  for (const [name, value] of Object.entries(SPACE)) {
+    element.style.setProperty(`--space-${name}`, value);
+  }
+  for (const [name, value] of Object.entries(TYPE.size)) {
+    element.style.setProperty(`--type-${name}`, value);
+  }
+  element.style.setProperty('--font-family', TYPE.fontFamily);
+
+  applyMotionTokens(element);
 
   element.style.setProperty('--target-min', `${clampTarget(targetSizePx)}px`);
   element.style.setProperty('--motion-scale', motionReduced ? '0' : '1');

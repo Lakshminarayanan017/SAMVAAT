@@ -7,6 +7,7 @@ import { CapabilitiesProvider } from '@/services/capabilities';
 import { applyTheme } from '@/design-system/tokens';
 import './styles/global.css';
 import './styles/game.css';
+import './ui/ui.css';
 
 
 

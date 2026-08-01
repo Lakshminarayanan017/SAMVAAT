@@ -155,3 +155,18 @@ export function keyframe(
 export function celebrationDuration(motion: MotionPreference): number {
   return motion === 'reduced' ? DURATION.quick : DURATION.celebrate;
 }
+
+/**
+ * Write the duration scale as custom properties.
+ *
+ * `ui.css` needs the durations, and a stylesheet cannot import a TypeScript
+ * constant. Writing them here keeps one definition rather than two that drift.
+ */
+export function applyMotionTokens(element: HTMLElement = document.documentElement): void {
+  for (const [name, ms] of Object.entries(DURATION)) {
+    element.style.setProperty(`--duration-${name}`, `${ms}ms`);
+  }
+  for (const [name, curve] of Object.entries(EASING)) {
+    element.style.setProperty(`--easing-${name}`, curve);
+  }
+}

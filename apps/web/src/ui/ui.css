@@ -1,0 +1,182 @@
+/**
+ * The primitive layer's pseudo-class and media-query rules.
+ *
+ * Everything an inline style object cannot express lives here: :focus-visible,
+ * :hover, :active, :disabled, forced-colours, and the 400% reflow behaviour.
+ *
+ * Scoped entirely to `[data-ui]` attributes, so these rules can never leak into
+ * feature markup that has not opted in.
+ */
+
+/* ── the focus treatment ─────────────────────────────────────────────────────
+   Two-tone, for the reason set out in design-system/semantic.ts: no single
+   colour contrasts with both the surface behind a control and the control
+   itself, because focus and accent are 1.31:1 in the light theme and identical
+   in both dark themes.
+
+   :focus-visible, not :focus — a mouse user clicking a button should not get a
+   ring; a keyboard or switch user must.                                        */
+
+[data-ui]:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--surface-base),
+    0 0 0 5px var(--focus-ring);
+}
+
+[data-ui][data-on-raised='true']:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--surface-raised),
+    0 0 0 5px var(--focus-ring);
+}
+
+/* Forced-colours mode replaces every colour we chose, including the ring. The
+   system focus colour is the only one guaranteed visible there.               */
+@media (forced-colors: active) {
+  [data-ui]:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+/* ── buttons ─────────────────────────────────────────────────────────────── */
+
+[data-ui='button'] {
+  border-style: solid;
+  border-width: 1px;
+}
+
+[data-ui='button'][data-variant='primary'] {
+  background: var(--interactive-rest);
+  color: var(--text-on-interactive);
+  border-color: var(--interactive-rest);
+}
+
+[data-ui='button'][data-variant='primary']:hover:not(:disabled) {
+  background: var(--interactive-hover);
+  border-color: var(--interactive-hover);
+}
+
+[data-ui='button'][data-variant='primary']:active:not(:disabled) {
+  background: var(--interactive-press);
+  border-color: var(--interactive-press);
+}
+
+[data-ui='button'][data-variant='secondary'] {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+[data-ui='button'][data-variant='secondary']:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+/* "quiet" is still a button with a border. A borderless control that only
+   announces itself on hover is invisible to a switch user, who never hovers. */
+[data-ui='button'][data-variant='quiet'] {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+[data-ui='button'][data-variant='quiet']:hover:not(:disabled) {
+  background: var(--surface-raised);
+}
+
+/* Destructive actions are NOT red-on-white with no other signal. Colour is one
+   of two signals here; the label always says what will be destroyed.          */
+[data-ui='button'][data-variant='danger'] {
+  background: var(--surface-raised);
+  color: var(--attention-ink);
+  border-color: var(--attention-ink);
+  border-width: 2px;
+}
+
+[data-ui='button'][data-variant='danger']:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+[data-ui='button']:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── cards ───────────────────────────────────────────────────────────────── */
+
+[data-ui='card'] {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border-style: solid;
+  border-color: var(--border-subtle);
+}
+
+[data-ui='card'][data-interactive='true'] {
+  cursor: pointer;
+  transition: border-color var(--duration-instant, 90ms) ease;
+}
+
+[data-ui='card'][data-interactive='true']:hover {
+  border-color: var(--interactive-rest);
+}
+
+/* ── progress ────────────────────────────────────────────────────────────── */
+
+[data-ui='progress-dot'][data-state='done'] {
+  background: var(--interactive-rest);
+  border-color: var(--interactive-rest);
+}
+
+[data-ui='progress-dot'][data-state='current'] {
+  background: var(--surface-base);
+  border-color: var(--interactive-rest);
+  border-width: 3px;
+}
+
+[data-ui='progress-dot'][data-state='todo'] {
+  background: var(--surface-sunken);
+  border-color: var(--border-subtle);
+}
+
+/* ── skeletons ───────────────────────────────────────────────────────────── */
+
+[data-ui='skeleton'] {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md, 8px);
+}
+
+[data-ui='skeleton'][data-animated='true'] {
+  animation: samvaad-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes samvaad-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* A shimmering placeholder is a permanently moving object on a screen somebody
+   is trying to read. Under reduced motion it holds still and says nothing less. */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui='skeleton'][data-animated='true'] {
+    animation: none;
+  }
+}
+
+/* ── reflow ──────────────────────────────────────────────────────────────────
+   WCAG 2.2 1.4.10: at 400% zoom a 1280px viewport behaves as 320px. Anything
+   that would force sideways scrolling has to wrap or scroll within itself.    */
+
+[data-ui='stack'][data-direction='horizontal'] {
+  flex-wrap: wrap;
+}
+
+[data-ui='scroll-x'] {
+  overflow-x: auto;
+  max-inline-size: 100%;
+}
