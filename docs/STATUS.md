@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (M1 complete — auth, persistence, onboarding) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (M14 trainer dashboard — E5 now enforced) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -16,7 +16,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M1 | Identity, consent & CAP | ✅ done | Auth, guest sessions, database, repositories, four-door onboarding. Speech enrolment (stage 3) deferred to M8 by design. |
 | M2 | Modality Router & design system | ✅ done | |
 | M3 | Workplace Language Bank | ✅ done | 226 phrases. Assets outstanding — see below. |
-| M4 | Practice loop (FSRS) | ✅ done | Reachable end-to-end. |
+| M4 | Practice loop (FSRS) | ✅ done | Client screen shipped; reachable end-to-end. |
 | M5 | Speech capture, consent, retention | ✅ done | |
 | M6 | ASR, alignment, GOP | ✅ done | Needs `requirements-ml.txt` installed to activate. |
 | M7 | Prosody, disfluency, PPI | 🟡 partial | Maths + gates done. **Classifier weights not yet dropped in.** |
@@ -26,14 +26,14 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M11 | Mock interview & bias-guarded rubric | ✅ done | Wired end-to-end; audit record persisted. |
 | M12 | Gamification | ⬜ not started | |
 | M13 | Recommendation engine | ⬜ not started | Session builder does a simple version already. |
-| M14 | The three dashboards | ⬜ not started | Blocks Ethics E5 enforcement. |
+| M14 | The three dashboards | 🟡 partial | Trainer dashboard done — **E5 now enforced**. Learner and institution views not started. |
 | M15 | Offline-first & on-device inference | ⬜ not started | |
 | M16 | ISL & AAC depth | 🟡 partial | AAC input + ISL output done. **ISL recognition not started** — blocks E4. |
 | M17 | Privacy hardening | 🟡 partial | Consent, retention, redaction, service auth, self-service erasure done. **No RLS, no data export.** |
 | M18 | Accessibility validation & pilot | 🟡 partial | axe + persona tests in CI. **No manual screen-reader passes. No pilot partner.** |
 | M19 | Observability & MLOps | 🟡 partial | Structured logging, tracing, redaction shipped. **No Sentry, no metrics, no dashboards.** |
 
-**9 done · 7 partial · 4 not started.**
+**9 done · 8 partial · 3 not started.**
 
 ---
 
@@ -49,9 +49,14 @@ under their own identity.
 
 | Was | Now |
 |---|---|
-| ~~No database~~ | SQLAlchemy async, SQLite in dev and tests, Postgres in production. Every store is a real repository. |
-| ~~No authentication~~ | JWT sessions, guest-first. `user_id` **removed from every request model**, so identity can only come from the token. IDOR regression suite. |
-| ~~No onboarding~~ | Four-door screen, then confirmation asked *through* the chosen channel. Profile validated against the contract and versioned in the database. |
+| ~~No database~~ | SQLAlchemy async, SQLite in dev and tests, Postgres in production. |
+| ~~No authentication~~ | JWT sessions, guest-first. `user_id` **removed from every request model**. IDOR regression suite. |
+| ~~No onboarding~~ | Four-door screen, then confirmation asked *through* the chosen channel. |
+| ~~E5 not enforced~~ | Trainer dashboard. Overrides written **onto** the audit record, never over the AI's score, with a required reason. `TestEthicsE5`. |
+| ~~Practice loop had no client screen~~ | Shipped. The daily loop a learner actually opens. |
+
+**Six of seven charter rules are now enforced by a test.** Only E4 remains,
+and it cannot be written until camera code exists (M16).
 
 What remains is breadth, not viability.
 
@@ -60,7 +65,6 @@ What remains is breadth, not viability.
 | Gap | Claim it undermines | Where |
 |---|---|---|
 | **E4 has no enforcing test** | "Video never leaves the device" is currently a promise, not a proof | M16 |
-| **E5 has no enforcing test** | "Every AI score is human-overridable" — there is no trainer surface at all | M14 |
 | **No manual screen-reader passes** | axe catches ~30%. NVDA/VoiceOver/TalkBack have never been run against this | M18 |
 | **Disfluency weights not installed** | Coaching cues cannot appear; `/capabilities` correctly reports `false` | M7 |
 
@@ -85,7 +89,6 @@ What remains is breadth, not viability.
 | No password or magic-link sign-in | Guest + upgrade covers the demo, and passwords are a liability we do not need | M17, when Supabase Auth lands behind the same `authenticate` dependency |
 | No Alembic migrations yet | `create_all` is correct for SQLite dev and tests | First Postgres deployment — `create_all` cannot alter a table and fails silently |
 | Social stories have no UI | The endpoint works and is testable | Whenever a learner is meant to read one |
-| The practice loop has no client screen | The API is complete and tested; the tab says so plainly rather than showing a blank | Next client work, after M14 |
 | Session token in `localStorage` | An httpOnly cookie needs a same-site deployment we do not have, and would break offline identity in M15 | When client and API share a domain |
 
 ---
@@ -95,14 +98,14 @@ What remains is breadth, not viability.
 | Job | Covers |
 |---|---|
 | `contracts` | Schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 158 tests, lint, cross-language contract round-trip, IDOR regression suite |
+| `api` | 164 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5` |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 148 tests, lint, typecheck, build, axe sweep across every channel and input mode |
+| `web` | 173 tests, lint, typecheck, build, axe sweep across every channel and input mode |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**710 tests.** Nothing merges without all seven green.
+**739 tests.** Nothing merges without all seven green.
 
 ---
 

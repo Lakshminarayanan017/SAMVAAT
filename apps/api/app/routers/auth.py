@@ -31,6 +31,9 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user_id: str
     is_guest: bool
+    #: Lets the client show the right tabs. NOT a permission — the API refuses
+    #: trainer routes on the token's claim regardless of what the client renders.
+    role: str = "learner"
     #: True when this learner has never completed onboarding, so the client
     #: knows to show the four-door screen rather than the practice loop.
     needs_onboarding: bool = True
@@ -50,6 +53,7 @@ async def guest(session: Session) -> TokenResponse:
         access_token=issue_token(user_id, is_guest=True),
         user_id=user_id,
         is_guest=True,
+        role="learner",
         needs_onboarding=True,
     )
 
@@ -74,6 +78,7 @@ async def me(principal: CurrentUser, session: Session) -> TokenResponse:
         access_token=issue_token(user.id, role=user.role, is_guest=user.is_guest),
         user_id=user.id,
         is_guest=user.is_guest,
+        role=user.role,
         needs_onboarding=profile is None,
     )
 
@@ -104,6 +109,7 @@ async def upgrade(
         access_token=issue_token(user.id, role=user.role, is_guest=False),
         user_id=user.id,
         is_guest=False,
+        role=user.role,
         needs_onboarding=profile is None,
     )
 

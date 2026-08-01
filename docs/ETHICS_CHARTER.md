@@ -138,9 +138,15 @@ its author, and its stated reason are persisted.
 AI is a co-pilot to the special educator, never a replacement. The override rate is also our
 most honest quality metric — see `docs/EXECUTION_PLAN.md` §16.
 
-**NOT YET ENFORCED** · there is no trainer surface yet. The test lands with
-the dashboards in M14.
-**To be implemented in** · the trainer feedback router, with the dashboards (M14)
+A trainer's correction is written ONTO the audit record, never over the AI's score.
+"The AI said X, the trainer said Y, because Z" is what makes the model answerable;
+overwriting would destroy exactly the evidence that matters.
+
+A reason is required, not optional. A specialist forced to articulate a disagreement
+usually sharpens it, and that text is the training signal for improving the rubric.
+
+**Enforced by** · `apps/api/tests/test_trainer.py::TestEthicsE5`
+**Implemented in** · `apps/api/app/routers/trainer.py` (M14)
 
 ---
 

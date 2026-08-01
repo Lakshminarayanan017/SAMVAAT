@@ -22,6 +22,12 @@ export interface Session {
   userId: string;
   isGuest: boolean;
   needsOnboarding: boolean;
+  /**
+   * Decides which tabs are rendered, nothing more. The API refuses trainer
+   * routes on the token's own claim, so a client that lied about this would
+   * simply show a tab that 403s.
+   */
+  isTrainer: boolean;
 }
 
 function read(): string | null {
@@ -83,6 +89,7 @@ interface TokenResponse {
   access_token: string;
   user_id: string;
   is_guest: boolean;
+  role: string;
   needs_onboarding: boolean;
 }
 
@@ -95,6 +102,7 @@ function toSession(body: TokenResponse): Session {
     userId: body.user_id,
     isGuest: body.is_guest,
     needsOnboarding: body.needs_onboarding,
+    isTrainer: body.role === 'trainer' || body.role === 'admin',
   };
 }
 

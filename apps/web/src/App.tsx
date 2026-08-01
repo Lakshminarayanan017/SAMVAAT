@@ -22,17 +22,23 @@ import { DEFAULT_PROFILE, ProfileProvider } from '@/a11y/ProfileProvider';
 import { ChannelComparison } from '@/features/channel-comparison/ChannelComparison';
 import { InterviewSession } from '@/features/interview/InterviewSession';
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow';
+import { PracticeSession } from '@/features/practice/PracticeSession';
+import { TrainerDashboard } from '@/features/trainer/TrainerDashboard';
 import { authHeaders, startSession, type Session } from '@/services/session';
 
 const BASE_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:8000';
 
-type View = 'practice' | 'interview' | 'router';
+type View = 'practice' | 'interview' | 'trainer' | 'router';
 
-const VIEWS: { id: View; label: string }[] = [
+const LEARNER_VIEWS: { id: View; label: string }[] = [
   { id: 'practice', label: 'Practise phrases' },
   { id: 'interview', label: 'Practise an interview' },
   { id: 'router', label: 'How this works' },
 ];
+
+//: Only rendered for a trainer token. The API refuses it regardless of what the
+//: client shows, so this is presentation rather than a security boundary.
+const TRAINER_VIEW: { id: View; label: string } = { id: 'trainer', label: 'My learners' };
 
 type Boot = 'starting' | 'onboarding' | 'ready' | 'offline';
 
@@ -117,14 +123,16 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
 
   // ── view changes ───────────────────────────────────────────────────────────
 
+  const views = session?.isTrainer ? [...LEARNER_VIEWS, TRAINER_VIEW] : LEARNER_VIEWS;
+
   useEffect(() => {
     if (firstRender.current) {
       firstRender.current = false;
       return;
     }
     mainRef.current?.focus();
-    announce(`${VIEWS.find((item) => item.id === view)?.label} view`);
-  }, [view, announce]);
+    announce(`${views.find((item) => item.id === view)?.label} view`);
+  }, [view, announce, views]);
 
   // ── states before the app proper ───────────────────────────────────────────
 
@@ -180,7 +188,7 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
           aria-label="Views"
           style={{ display: 'flex', gap: '.5rem', marginTop: '.75rem', flexWrap: 'wrap' }}
         >
-          {VIEWS.map((item) => (
+          {views.map((item) => (
             <button
               key={item.id}
               role="tab"
@@ -212,30 +220,14 @@ export function App({ blocks }: { blocks: ContentBlock[] }) {
         tabIndex={-1}
         style={{ padding: 'var(--space-lg, 1.5rem)', maxWidth: '80rem', margin: '0 auto' }}
       >
+        {view === 'practice' && session && (
+          <PracticeSession token={session.token} blocks={blocks} />
+        )}
         {view === 'interview' && <InterviewSession userId={session?.userId ?? 'guest'} />}
+        {view === 'trainer' && session && <TrainerDashboard token={session.token} />}
         {view === 'router' && <ChannelComparison blocks={blocks} embedded />}
-        {view === 'practice' && <PracticePlaceholder />}
       </main>
     </ProfileProvider>
-  );
-}
-
-/**
- * The practice loop exists and is fully tested on the API; the client screen for
- * it is the next piece of work. Saying so is better than a blank tab, and better
- * than hiding the tab and pretending the feature is not there.
- */
-function PracticePlaceholder() {
-  return (
-    <section aria-labelledby="practice-heading">
-      <h2 id="practice-heading" style={{ marginTop: 0 }}>
-        Practise phrases
-      </h2>
-      <p style={{ maxWidth: '55ch' }}>
-        The daily practice screen is being built. In the meantime, try{' '}
-        <strong>Practise an interview</strong> — that is ready now.
-      </p>
-    </section>
   );
 }
 

@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import audio, auth, conversation, health, practice, profile
+from app.routers import audio, auth, conversation, health, practice, profile, trainer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -83,6 +83,7 @@ def create_app() -> FastAPI:
     app.include_router(audio.router)
     app.include_router(conversation.router)
     app.include_router(profile.router)
+    app.include_router(trainer.router)
 
     return app
 

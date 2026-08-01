@@ -22,9 +22,12 @@ from sqlalchemy.pool import StaticPool
 # Set before app.config is imported anywhere, so the cached settings pick it up.
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
+from uuid import uuid4  # noqa: E402
+
 from app.db.base import Base  # noqa: E402
 from app.db.session import get_session  # noqa: E402
 from app.main import create_app  # noqa: E402
+from app.models.tables import User  # noqa: E402
 from app.security.auth import issue_token, new_user_id  # noqa: E402
 
 
@@ -85,8 +88,15 @@ class Learner:
     def post(self, url: str, **kwargs):
         return self.client.post(url, headers=self.headers, **kwargs)
 
+    def put(self, url: str, **kwargs):
+        return self.client.put(url, headers=self.headers, **kwargs)
+
     def delete(self, url: str, **kwargs):
         return self.client.delete(url, headers=self.headers, **kwargs)
+
+
+class Trainer(Learner):
+    """Same interface, a trainer token."""
 
 
 def _sign_up(client: TestClient) -> Learner:
@@ -111,6 +121,24 @@ def other_learner(app) -> Iterator[Learner]:
     """
     with TestClient(app) as client:
         yield _sign_up(client)
+
+
+@pytest_asyncio.fixture
+async def trainer(app, engine) -> Trainer:
+    """A trainer: a real user row with the role, and a token that matches.
+
+    There is no self-service trainer signup, deliberately — a trainer account is
+    provisioned by an institution. Tests create the row directly rather than
+    inventing an endpoint that should not exist.
+    """
+    user_id = f"trn_{uuid4().hex[:12]}"
+
+    async with async_sessionmaker(engine, expire_on_commit=False)() as db:
+        db.add(User(id=user_id, role="trainer", is_guest=False))
+        await db.commit()
+
+    with TestClient(app) as client:
+        yield Trainer(client, user_id, issue_token(user_id, role="trainer", is_guest=False))
 
 
 @pytest.fixture

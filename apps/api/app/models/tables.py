@@ -138,6 +138,35 @@ class AudioObjectRow(Base):
     expires_at: Mapped[datetime | None] = mapped_column(UtcDateTime)
 
 
+class TrainerLinkRow(Base):
+    """A trainer is responsible for a learner.
+
+    This is an ADMINISTRATIVE fact — an institution assigning a caseload — and
+    it is deliberately separate from whether the trainer may see that learner's
+    data. Seeing the data requires the learner's own `trainer_visibility`
+    consent, which they grant and revoke themselves.
+
+    Collapsing the two would mean an institution could grant itself access to a
+    disabled person's practice attempts at disclosing their disability. The
+    split is the whole point.
+    """
+
+    __tablename__ = "trainer_links"
+    __table_args__ = (
+        Index("ix_trainer_link", "trainer_user_id", "learner_user_id", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    trainer_user_id: Mapped[str] = mapped_column(String(64), index=True)
+    learner_user_id: Mapped[str] = mapped_column(String(64), index=True)
+    #: What the trainer calls this learner. Learners are often onboarded by a
+    #: trainer before they ever type, so a display name has to live somewhere
+    #: that is not the learner's own account.
+    display_name: Mapped[str] = mapped_column(String(120), default="")
+    institution_id: Mapped[str | None] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+
+
 class RubricAuditRow(Base):
     """Layer four of the E2 enforcement.
 
