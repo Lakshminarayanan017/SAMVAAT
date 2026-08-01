@@ -6,10 +6,11 @@
  * until the learner has told us which one they can use — which is the whole
  * point of building the router first.
  *
- * Deliberately not a router library yet. Three views do not justify one, and the
- * accessibility cost of a client-side router — announcing route changes,
- * managing focus, keeping the document title in step — is real work that should
- * be done once, properly, when there is enough here to warrant it (M14).
+ * Deliberately not a router library yet. Nothing here needs a shareable URL or
+ * a working back button, and the accessibility cost of a client-side router —
+ * announcing route changes, managing focus, keeping the document title in step
+ * — is real work that should be done once, properly. The trigger is a surface
+ * somebody needs to link to; tracked in docs/STATUS.md.
  *
  * What is done properly already: the view switcher is a real tablist, focus
  * moves to the new view on change, and the change is announced.
@@ -24,6 +25,7 @@ import { InstitutionDashboard } from '@/features/institution/InstitutionDashboar
 import { InterviewSession } from '@/features/interview/InterviewSession';
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow';
 import { PracticeSession } from '@/features/practice/PracticeSession';
+import { YourData } from '@/features/privacy/YourData';
 import { ProgressPanel } from '@/features/progress/ProgressPanel';
 import { StoryChooser } from '@/features/stories/StoryChooser';
 import { TrainerDashboard } from '@/features/trainer/TrainerDashboard';
@@ -39,6 +41,7 @@ type View =
   | 'interview'
   | 'stories'
   | 'progress'
+  | 'data'
   | 'trainer'
   | 'institution'
   | 'router';
@@ -48,6 +51,7 @@ const LEARNER_VIEWS: { id: View; label: string }[] = [
   { id: 'interview', label: 'Practise an interview' },
   { id: 'stories', label: 'Understand a situation' },
   { id: 'progress', label: 'My progress' },
+  { id: 'data', label: 'Your data' },
   { id: 'router', label: 'How this works' },
 ];
 
@@ -288,6 +292,7 @@ export function App() {
         {view === 'interview' && <InterviewSession userId={session?.userId ?? 'guest'} />}
         {view === 'stories' && session && <StoryChooser token={session.token} />}
         {view === 'progress' && session && <ProgressPanel token={session.token} />}
+        {view === 'data' && session && <YourData token={session.token} />}
         {view === 'trainer' && session && <TrainerDashboard token={session.token} />}
         {view === 'institution' && session && <InstitutionDashboard token={session.token} />}
         {view === 'router' && <ChannelComparison blocks={blocks} embedded />}

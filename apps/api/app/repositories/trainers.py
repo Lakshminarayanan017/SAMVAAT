@@ -106,6 +106,22 @@ class TrainerRepository:
             )
         )
 
+    async def delete_for_learner(self, learner_user_id: str) -> None:
+        """Erasure — every link naming this learner, whichever trainer holds it.
+
+        This is the row that matters most on the way out. `display_name` is the
+        learner's actual name, and it lives here rather than on their account
+        because trainers onboard learners who have never typed anything. An
+        erasure that cleared the practice data and left this behind would leave
+        a named record of a disabled person on our servers.
+
+        Deliberately not `unlink`: erasure is not the learner's trainer letting
+        go of them, and it must not require knowing who that trainer was.
+        """
+        await self.session.execute(
+            delete(TrainerLinkRow).where(TrainerLinkRow.learner_user_id == learner_user_id)
+        )
+
     async def is_linked(self, trainer_user_id: str, learner_user_id: str) -> bool:
         result = await self.session.execute(
             select(TrainerLinkRow.id).where(

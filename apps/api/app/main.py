@@ -20,6 +20,7 @@ from app.routers import (
     auth,
     content,
     conversation,
+    export,
     health,
     institution,
     practice,
@@ -98,6 +99,7 @@ def create_app() -> FastAPI:
     app.include_router(progress.router)
     app.include_router(trainer.router)
     app.include_router(institution.router)
+    app.include_router(export.router)
 
     return app
 

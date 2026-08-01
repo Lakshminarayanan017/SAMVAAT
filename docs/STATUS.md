@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (M14 institution dashboard, M10 social stories UI) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (M14 institution dashboard, M10 social stories UI, M17 export + erasure UI) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -29,7 +29,7 @@ page, and it is how M9–M11 sat finished-and-invisible for a day.
 | M14 | The three dashboards | ✅ done | Learner, trainer and institution views all reachable. Cohort figures pass a k-anonymity floor (n=5) that also withholds any cell whose *complement* is small, so published figures cannot be subtracted to recover a hidden one. |
 | M15 | Offline-first & on-device inference | 🟡 partial | Service worker, IndexedDB, append-only outbox, content un-bundled. **On-device ASR not started.** |
 | M16 | ISL & AAC depth | 🟡 partial | AAC input + ISL output done. **ISL recognition not started** — blocks E4. |
-| M17 | Privacy hardening | 🟡 partial | Consent, retention, redaction, service auth, self-service erasure done. **No RLS, no data export.** |
+| M17 | Privacy hardening | 🟡 partial | Consent, retention, redaction, service auth, export and erasure — all reachable from a "Your data" screen. **No RLS.** |
 | M18 | Accessibility validation & pilot | 🟡 partial | axe + persona tests in CI. **No manual screen-reader passes. No pilot partner.** |
 | M19 | Observability & MLOps | 🟡 partial | Structured logging, tracing, redaction shipped. **No Sentry, no metrics, no dashboards.** |
 
@@ -54,6 +54,9 @@ under their own identity.
 | ~~No onboarding~~ | Four-door screen, then confirmation asked *through* the chosen channel. |
 | ~~E5 not enforced~~ | Trainer dashboard. Overrides written **onto** the audit record, never over the AI's score, with a required reason. `TestEthicsE5`. |
 | ~~Practice loop had no client screen~~ | Shipped. The daily loop a learner actually opens. |
+| ~~Erasure left three tables behind~~ | **Found by writing the test that walks the schema instead of a list of tables.** `DELETE /auth/me` reported "everything about you has been deleted" while the communication profile, the consent ledger and the trainer link all survived — the user row is removed with a Core `delete()`, which does not run ORM cascades, and SQLite ignores foreign keys unless `PRAGMA foreign_keys=ON`. The trainer link carries `display_name`: the learner's real name. Fixed, and the schema walk now fails on any table that still names an erased learner. |
+| ~~No data export~~ | `GET /export/me`. Leads with a plain-language summary, then the complete record. Checked against the schema so it cannot drift from what erasure deletes. |
+| ~~Export and erasure were API-only~~ | A "Your data" screen. Both rights were unreachable from the client, which made "self-service" a claim rather than a fact. |
 | ~~Social stories unreachable~~ | Shipped. The last case of "built but invisible" — the endpoint had worked since M10 with nothing in the product able to open one. |
 | ~~Institution dashboard not built~~ | Shipped, behind three gates. The one worth naming is the third: a cohort figure is withheld when the cell **or its complement** falls below n=5, and if a breakdown would leave exactly one category hidden, a second goes too — otherwise the published columns subtract to reveal it. In a centre of twelve, "1 learner uses Indian Sign Language" names that person to everyone who works there. |
 
@@ -103,14 +106,14 @@ What remains is breadth, not viability.
 | Job | Covers |
 |---|---|
 | `contracts` | 20 checks — schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 244 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5`, k-anonymity |
+| `api` | 268 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5`, k-anonymity |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 53 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 249 tests, lint, typecheck, build, axe sweep across every channel, every input mode **and every real screen** |
+| `web` | 267 tests, lint, typecheck, build, axe sweep across every channel, every input mode **and every real screen** |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**775 tests** (244 + 188 + 41 + 53 + 249), plus the 20 contract checks. Nothing merges
+**817 tests** (268 + 188 + 41 + 53 + 267), plus the 20 contract checks. Nothing merges
 without all seven jobs green.
 
 > A previous revision of this file claimed 825. It did not reconcile with the per-job

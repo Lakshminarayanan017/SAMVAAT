@@ -20,6 +20,7 @@ import type { CommunicationAbilityProfile } from '@samvaad/contracts';
 import { AnnouncerProvider } from '@/a11y/Announcer';
 import { ProfileProvider } from '@/a11y/ProfileProvider';
 import { InstitutionDashboard } from '@/features/institution/InstitutionDashboard';
+import { YourData } from '@/features/privacy/YourData';
 import { ProgressPanel } from '@/features/progress/ProgressPanel';
 import { SocialStory } from '@/features/stories/SocialStory';
 import { StoryChooser } from '@/features/stories/StoryChooser';
@@ -187,6 +188,21 @@ describe('the progress panel', () => {
     const { container } = shell(<ProgressPanel token="t" />);
     // Real content, not an empty shell or an error state.
     await waitFor(() => expect(container.textContent).toContain('120'));
+    await expectClean(container);
+  });
+});
+
+describe('your data', () => {
+  it('is clean, including the delete confirmation', async () => {
+    stub({ erased: true });
+    const { container } = shell(<YourData token="t" />);
+
+    const start = Array.from(container.querySelectorAll('button')).find((b) =>
+      /delete everything about me/i.test(b.textContent ?? ''),
+    );
+    start?.click();
+
+    await waitFor(() => expect(container.textContent).toMatch(/are you sure/i));
     await expectClean(container);
   });
 });

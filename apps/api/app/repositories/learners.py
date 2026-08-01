@@ -116,6 +116,21 @@ class ProfileRepository:
         )
         return [row.profile for row in result.scalars()]
 
+    async def delete_for_user(self, user_id: str) -> None:
+        """Erasure.
+
+        `CapRow` declares `ondelete="CASCADE"`, and that is not enough on its
+        own: the user row is removed with a Core `delete()`, which does not run
+        ORM cascades, and SQLite ignores foreign keys entirely unless
+        `PRAGMA foreign_keys=ON` is set — which it is not, in dev or in tests.
+        Every profile version of a learner who asked to be forgotten survived
+        both mechanisms until this method existed.
+
+        These rows record whether someone is non-verbal. Deleting them
+        explicitly, and testing that, is the only version of this that is true.
+        """
+        await self.session.execute(delete(CapRow).where(CapRow.user_id == user_id))
+
 
 class ConsentRepository:
     """Append-only ledger."""
@@ -159,6 +174,19 @@ class ConsentRepository:
             select(ConsentRow).where(ConsentRow.user_id == user_id).order_by(ConsentRow.id)
         )
         return list(result.scalars())
+
+    async def delete_for_user(self, user_id: str) -> None:
+        """Erasure.
+
+        The ledger is append-only *during a learner's life with us* — that is
+        what makes it evidence of what they agreed to and when. Erasure is the
+        one operation that ends it, because a record of what a disabled person
+        consented to is itself information about them.
+
+        `ConsentRow.user_id` has no ForeignKey at all, so nothing else would
+        ever have removed these rows.
+        """
+        await self.session.execute(delete(ConsentRow).where(ConsentRow.user_id == user_id))
 
 
 class CardRepository:
@@ -363,6 +391,21 @@ class AuditRepository:
             )
         )
         return result.scalar_one_or_none()
+
+    async def list_for_user(self, user_id: str) -> list[RubricAuditRow]:
+        """Every audit record for a learner, oldest first. Used by export.
+
+        A learner is entitled to the evidence behind their own scores — most
+        pointedly `excluded_dimensions`, which is the record of what the rubric
+        was forbidden to grade them on. That is the E2 promise, in their hands
+        rather than only in ours.
+        """
+        result = await self.session.execute(
+            select(RubricAuditRow)
+            .where(RubricAuditRow.user_id == user_id)
+            .order_by(RubricAuditRow.at)
+        )
+        return list(result.scalars())
 
     async def delete_for_user(self, user_id: str) -> None:
         await self.session.execute(delete(RubricAuditRow).where(RubricAuditRow.user_id == user_id))

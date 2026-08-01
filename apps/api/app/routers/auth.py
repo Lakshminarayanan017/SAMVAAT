@@ -122,13 +122,26 @@ async def erase(principal: CurrentUser, session: Session) -> dict:
     can reliably exercise. Every table is cleared here rather than relying on
     cascades, so each repository's deletion is independently testable and no
     table can be forgotten because its foreign key happened to be nullable.
+
+    That last sentence used to be aspirational. Three tables — the profile, the
+    consent ledger and the trainer link — were missing from this list and
+    survived erasure, because the user row is removed with a Core `delete()`
+    (which does not run ORM cascades) and SQLite ignores foreign keys unless
+    `PRAGMA foreign_keys=ON`. The trainer link carries the learner's real name.
+
+    `tests/test_erasure_completeness.py` now walks the schema and fails on any
+    table that still names the learner, so this list cannot silently fall
+    behind the model again.
     """
     from app.repositories.learners import (
         AudioRepository,
         AuditRepository,
         CardRepository,
+        ConsentRepository,
         ConversationRepository,
+        ProfileRepository,
     )
+    from app.repositories.trainers import TrainerRepository
 
     user_id = principal.user_id
 
@@ -136,6 +149,9 @@ async def erase(principal: CurrentUser, session: Session) -> dict:
     await ConversationRepository(session).delete_for_user(user_id)
     await AudioRepository(session).purge_for_user(user_id)
     await AuditRepository(session).delete_for_user(user_id)
+    await ProfileRepository(session).delete_for_user(user_id)
+    await ConsentRepository(session).delete_for_user(user_id)
+    await TrainerRepository(session).delete_for_learner(user_id)
     await UserRepository(session).delete(user_id)
 
     return {
