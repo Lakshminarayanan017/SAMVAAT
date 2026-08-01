@@ -337,3 +337,30 @@
 :root[style*='--motion-scale: 0'] .level-tile:hover {
   transform: none;
 }
+
+/* The celebration particle burst (ADR-0010).
+   Full motion level only, single emission, no loop. transform and opacity
+   only — 60fps on a mid-range Android is the target, and animating width or
+   top is what loses it. */
+@keyframes samvaad-particle {
+  0% {
+    opacity: 1;
+    scale: 0.3;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1;
+  }
+}
+
+/* Belt and braces. The component already refuses to render particles unless
+   the learner is on Full, but if that ever regresses the OS preference still
+   stops them moving. */
+@media (prefers-reduced-motion: reduce) {
+  [data-testid='celebration-particles'] {
+    display: none;
+  }
+}

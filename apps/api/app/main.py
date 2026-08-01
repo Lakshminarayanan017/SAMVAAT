@@ -25,6 +25,7 @@ from app.routers import (
     health,
     institution,
     journey,
+    missions,
     practice,
     profile,
     progress,
@@ -104,6 +105,7 @@ def create_app() -> FastAPI:
     app.include_router(institution.router)
     app.include_router(export.router)
     app.include_router(flags.router)
+    app.include_router(missions.router)
 
     return app
 

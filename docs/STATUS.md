@@ -1,6 +1,6 @@
 # Status & Gap Register
 
-**Updated:** 2026-08-01 (Redesign Blueprint Phase 1 — primitives, semantic tokens, router, flags) · Update this file in the same commit as the work it describes.
+**Updated:** 2026-08-01 (Redesign Blueprint Phases 1-2 — primitives, router, flags, the level loop) · Update this file in the same commit as the work it describes.
 
 A module is only "done" when a learner can reach it. Code that passes its tests but is
 unreachable from the client is **built, not done** — that distinction is the whole point of this
@@ -54,6 +54,8 @@ under their own identity.
 | ~~No onboarding~~ | Four-door screen, then confirmation asked *through* the chosen channel. |
 | ~~E5 not enforced~~ | Trainer dashboard. Overrides written **onto** the audit record, never over the AI's score, with a required reason. `TestEthicsE5`. |
 | ~~Practice loop had no client screen~~ | Shipped. The daily loop a learner actually opens. |
+| ~~No level runner~~ | Mission intro, sequencer, progress dots and celebration, behind `game_loop`. Three mission types built of the eight the curriculum names; a level declaring an unbuilt type falls back rather than being empty. |
+| ~~No celebration~~ | Stars land, XP counts, announced **once as one sentence** rather than three interrupting live-region updates. Three motion levels ([ADR-0010](ADR/0010-three-motion-levels.md)). |
 | ~~No client-side router~~ | React Router, behind one `<AppRoute>` wrapper that moves focus, announces and sets the title on every navigation — with a test that walks the real route table so a route added without it fails CI. See [ADR-0008](ADR/0008-accessible-route-contract.md). |
 | ~~No UI primitives~~ | `apps/web/src/ui/` — twelve primitives. Feature screens no longer invent their own button, spacing or idea of "muted text". |
 | ~~No code splitting~~ | Route-level lazy imports. Entry chunk **69.8 KB gzipped** against a 120 KB budget, enforced by `npm run check:bundle`. |
@@ -110,14 +112,14 @@ What remains is breadth, not viability.
 |---|---|
 | `bundle` | Entry chunk <=120 KB gzipped (currently 69.8 KB), no route chunk over 60 KB |
 | `contracts` | 20 checks — schema, drift, accessibility rules, gate self-test, 226 phrases |
-| `api` | 299 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5`, k-anonymity |
+| `api` | 319 tests, lint, cross-language round-trip, IDOR suite, `TestEthicsE5`, k-anonymity |
 | `speech` | 188 tests, lint, PPI monotonicity + disfluency-invariance fairness gates |
 | `genai` | 41 tests, lint, `TestDisfluencyInvariance` |
 | `platform` | 83 tests, lint, redaction policy + fail-closed service auth |
-| `web` | 478 tests, lint, typecheck, build, axe sweep across every channel, every input mode **and every real screen** |
+| `web` | 513 tests, lint, typecheck, build, axe sweep across every channel, every input mode **and every real screen** |
 | `ethics` | All 7 charter rules present; **every path the charter cites exists** |
 
-**1,089 tests** (299 + 188 + 41 + 83 + 478), plus the 20 contract checks. Nothing merges
+**1,144 tests** (319 + 188 + 41 + 83 + 513), plus the 20 contract checks. Nothing merges
 without all seven jobs green.
 
 > A previous revision of this file claimed 825. It did not reconcile with the per-job

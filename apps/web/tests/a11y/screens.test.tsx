@@ -19,6 +19,8 @@ import type { CommunicationAbilityProfile } from '@samvaad/contracts';
 
 import { AnnouncerProvider } from '@/a11y/Announcer';
 import { ProfileProvider } from '@/a11y/ProfileProvider';
+import { Celebration } from '@/game/Celebration';
+import { LevelRunner } from '@/game/LevelRunner';
 import { InstitutionDashboard } from '@/features/institution/InstitutionDashboard';
 import { YourData } from '@/features/privacy/YourData';
 import { ProgressPanel } from '@/features/progress/ProgressPanel';
@@ -236,5 +238,94 @@ describe('social stories', () => {
 
     await waitFor(() => expect(container.textContent).toContain('stockroom'));
     await expectClean(container);
+  });
+});
+
+describe('the level runner', () => {
+  const plan = {
+    level_id: 'lvl1',
+    title: 'First words',
+    world_title: 'Finding Your Voice',
+    sensitive: false,
+    total: 2,
+    missions: [
+      {
+        id: 'm1',
+        type: 'recognise',
+        block_id: 'p1',
+        prompt: 'Which one means the same thing?',
+        options: ['Good morning', 'Good afternoon'],
+        scaffold: 'The right one says the same thing in different words.',
+      },
+    ],
+  };
+
+  const blocks = [
+    {
+      id: 'p1',
+      kind: 'phrase',
+      canonical_text: 'Good morning',
+      intent: 'greeting',
+      difficulty: 1,
+      representations: { caption: 'Good morning', easy_read: 'Good morning' },
+      interaction: { accepted_input_modes: ['text', 'aac', 'switch'] },
+      a11y: { requires_audio: false, requires_vision: false, requires_speech: false },
+      version: 1,
+    },
+  ] as never;
+
+  it('the intro is clean', async () => {
+    stub({ xp_awarded: 10 });
+    const { container } = shell(
+      <LevelRunner
+        plan={plan as never}
+        blocks={blocks}
+        token="t"
+        celebrationLevel="gentle"
+        onLeave={() => {}}
+        onNext={() => {}}
+      />,
+    );
+    await waitFor(() => expect(container.textContent).toMatch(/first words/i));
+    await expectClean(container);
+  });
+
+  it('a mission in progress is clean', async () => {
+    stub({ xp_awarded: 10 });
+    const { container } = shell(
+      <LevelRunner
+        plan={plan as never}
+        blocks={blocks}
+        token="t"
+        celebrationLevel="gentle"
+        onLeave={() => {}}
+        onNext={() => {}}
+      />,
+    );
+
+    const start = Array.from(container.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Start',
+    );
+    start?.click();
+
+    await waitFor(() => expect(container.textContent).toMatch(/means the same thing/i));
+    await expectClean(container);
+  });
+
+  it('the celebration is clean at every motion level', async () => {
+    for (const level of ['full', 'gentle', 'still'] as const) {
+      const { container, unmount } = shell(
+        <Celebration
+          starsEarned={3}
+          xpEarned={40}
+          level={level}
+          onAgain={() => {}}
+          onDone={() => {}}
+        />,
+      );
+      await waitFor(() => expect(container.textContent).toMatch(/level finished/i));
+      await expectClean(container);
+      unmount();
+    }
   });
 });

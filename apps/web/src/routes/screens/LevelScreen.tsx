@@ -1,17 +1,11 @@
 /**
  * Route screen: one level. Chromeless.
  *
- * WHAT THIS IS, HONESTLY
- * ----------------------
- * The mission runner is Phase 2 of the blueprint. Phase 1 builds the route, the
- * chrome-free frame and the way back, and runs the **existing** practice loop
- * inside it. That is a deliberate interim rather than a placeholder: a learner
- * following a level link today gets a real, working practice session scoped to
- * that level, not a "coming soon" page.
- *
- * When the mission runner lands it replaces the body of this file and nothing
- * else — the route, the link a trainer sent, and the accessible frame all stay
- * exactly as they are.
+ * Two bodies, one frame. With `game_loop` on the learner gets the mission
+ * runner; with it off they get the existing practice loop scoped to this
+ * level's phrases. Both are real, working sessions — the flag's off-state is
+ * the current behaviour rather than a degraded one, which is the property the
+ * whole rollout plan rests on.
  *
  * The sensitive-chapter exit is here rather than in Phase 2 because it is not a
  * gameplay feature. A learner rehearsing disclosure is rehearsing something
@@ -22,8 +16,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { PracticeSession } from '@/features/practice/PracticeSession';
+import { useProfile } from '@/a11y/ProfileProvider';
+import { resolveMotion } from '@/design-system/motion';
+import { resolveCelebration } from '@/game/Celebration';
+import { LevelRunner, type MissionPlan } from '@/game/LevelRunner';
 import { AppRoute } from '@/routes/AppRoute';
-import { useSession } from '@/services/SessionProvider';
+import { useFlag, useSession } from '@/services/SessionProvider';
 import { Button, Card, ErrorState, Skeleton, Stack, Text } from '@/ui';
 
 const BASE_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:8000';
@@ -49,9 +47,12 @@ interface LevelDetail {
 export default function LevelScreen() {
   const { levelId } = useParams<{ levelId: string }>();
   const { session, blocks } = useSession();
+  const { profile } = useProfile();
   const navigate = useNavigate();
+  const gameLoop = useFlag('game_loop');
 
   const [level, setLevel] = useState<LevelDetail | null>(null);
+  const [plan, setPlan] = useState<MissionPlan | null>(null);
   const [failed, setFailed] = useState<'network' | 'missing' | null>(null);
 
   const load = useCallback(async () => {
@@ -71,7 +72,19 @@ export default function LevelScreen() {
       return;
     }
     setLevel((await response.json()) as LevelDetail);
-  }, [levelId, session.token]);
+
+    if (gameLoop) {
+      const missions = await fetch(
+        `${BASE_URL}/missions/level/${encodeURIComponent(levelId)}`,
+        { headers: { Authorization: `Bearer ${session.token}` } },
+      ).catch(() => null);
+
+      // Missions failing to load is not fatal: the level still runs through the
+      // practice loop below. A learner who came here to practise should not be
+      // sent away because one of two requests failed.
+      if (missions?.ok) setPlan((await missions.json()) as MissionPlan);
+    }
+  }, [gameLoop, levelId, session.token]);
 
   useEffect(() => {
     void load();
@@ -128,7 +141,21 @@ export default function LevelScreen() {
 
             {level.sensitive && <SensitiveNotice onLeave={() => navigate('/')} />}
 
-            <PracticeSession token={session.token} blocks={levelBlocks} />
+            {plan ? (
+              <LevelRunner
+                plan={plan}
+                blocks={levelBlocks}
+                token={session.token}
+                celebrationLevel={resolveCelebration(
+                  undefined,
+                  resolveMotion(profile.presentation?.motion_reduced),
+                )}
+                onLeave={() => navigate('/')}
+                onNext={() => navigate('/')}
+              />
+            ) : (
+              <PracticeSession token={session.token} blocks={levelBlocks} />
+            )}
           </>
         )}
       </Stack>
